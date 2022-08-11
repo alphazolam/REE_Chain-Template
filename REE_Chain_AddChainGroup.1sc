@@ -1,0 +1,104 @@
+//------------------------------------------------
+//--- 010 Editor v9.0.2 Script File
+//
+//      File: REE_Chain_AddChainGroup.1sc
+//   Authors: alphaZomega
+//   Version: 0.3
+//   Purpose: Add new bones to chain files
+//  Category: Modding
+//   History: November 12 2021 
+//------------------------------------------------
+uint i;
+string s, output;
+SPrintf(s, "%u", Header.groupCount-1);
+wstring newBone = InputString("Bone Name", "Enter a new chain bone name:", "");
+uint copyFrom = InputNumber("Copy Bone Header", "Choose a Bone Chain[] to copy data from: ", s);
+
+uint paddingSize = 0;
+while ((paddingSize + sizeof(newBone)) % 16 != 0) paddingSize++;
+
+uint bnHeaderSz = 48;
+uint bnDataSz = 64;
+if (Header.version >= 48) {
+    bnHeaderSz = 112;
+    bnDataSz = 80;
+}
+if (Header.version == 39 || Header.version == 35) {
+    bnHeaderSz = 80;
+    bnDataSz = 80;
+}
+if (Header.version == 5) {
+    bnHeaderSz = 64;
+    bnDataSz = 48;
+}
+
+char bnHeaderBytes[bnHeaderSz];
+char bnBytes[(bnDataSz * ChainGroups.ChainGroup[copyFrom].nodeCount)];
+
+//read old bone header data:
+ReadBytes(bnBytes, startof(ChainGroups.ChainGroup[copyFrom].Node[0]), sizeof(bnBytes));
+
+//fix offsets in advance:
+for (i=0; i< Header.groupCount; i++) {
+    ChainGroups.ChainGroup[i].terminalNodeName.offset += bnHeaderSz;
+    ChainGroups.ChainGroup[i].nodeTbl += bnHeaderSz; 
+}
+
+uint64 insertionPoint = FileSize(); 
+if (Header.windSettingTbl != 0)
+    insertionPoint = Header.windSettingTbl;
+else if (header.linkCount != 0)
+    insertionPoint = Header.linkTbl;
+
+//Printf("%u\n", insertionPoint);
+uint64 insertionPointOG = insertionPoint;
+
+//write new bone string:
+InsertBytes(insertionPoint, sizeof(newBone), 0);
+WriteWString(insertionPoint, newBone);
+insertionPoint += sizeof(newBone);
+while (insertionPoint % 16 != 0) { //padding
+    InsertBytes(insertionPoint, 1, 0);
+    insertionPoint++;
+}
+
+//write new bone's chain data:
+InsertBytes(insertionPoint, sizeof(bnBytes), 0);
+WriteBytes(bnBytes, insertionPoint, sizeof(bnBytes));
+insertionPoint += sizeof(bnBytes);
+while (insertionPoint % 16 != 0) { //padding
+    InsertBytes(insertionPoint, 1, 0);
+    insertionPoint++;
+}
+SPrintf(s, "final InsertionPoint: %u\n", insertionPoint);  output += s;
+uint64 diff = (insertionPoint - insertionPointOG);
+SPrintf(s, "diff: %u\n", diff);  output += s;
+
+//read old bone header:
+ReadBytes(bnHeaderBytes, startof(ChainGroups.ChainGroup[copyFrom]), bnHeaderSz);
+
+//create + fix new bone header:
+FSeek(startof(ChainGroups.ChainGroup[Header.groupCount-1]) + bnHeaderSz);
+InsertBytes(FTell(), bnHeaderSz, 0);
+WriteBytes(bnHeaderBytes, FTell(), bnHeaderSz);
+WriteUInt64(FTell(), insertionPoint - diff + bnHeaderSz);
+WriteUInt64(FTell()+8, insertionPoint - diff + bnHeaderSz + sizeof(newBone) + paddingSize);
+
+//write new bone hash:
+WriteUInt(FTell()+24, hash_wide((string)newBone));
+
+//fix header offsets:
+Header.groupCount += 1;
+if (Header.windSettingTbl) 
+    Header.windSettingTbl += diff + bnHeaderSz;
+if (Header.linkTbl)
+    Header.linkTbl += diff + bnHeaderSz;
+
+RunTemplate("", 0);
+for (i=0; i< Header.linkCount; i++) {
+    if (ChainLinks.ChainLink[i].nodeTbl != 0) 
+        ChainLinks.ChainLink[i].nodeTbl += diff + bnHeaderSz;
+}
+RunTemplate("", 0);
+WriteUByte(3, 0);
+Printf(output);

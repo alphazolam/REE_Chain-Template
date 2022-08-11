@@ -1,0 +1,1223 @@
+//------------------------------------------------
+//--- 010 Editor v9.0.2 Binary Template
+//
+//      File: REE_Chain.bt
+//   Authors: alphaZomega
+//   Version: 1.43
+//   Purpose: RE Engine Chain file editing
+//  Category: RE Engine
+// File Mask: *.chain.*
+//  ID Bytes: [+4]63 68 61 6E
+//   History: July 2, 2022
+//------------------------------------------------
+LittleEndian();
+
+local int i <hidden=true>, j <hidden=true>, k <hidden=true>, m <hidden=true>;
+local int settingSz <hidden=true> = 160;
+local int chainGrpSz <hidden=true> = 80;
+local int colSz <hidden=true> = 80;
+local int nodeSz <hidden=true> = 80;
+local uint nodeTotal <hidden=true>;
+
+uint Version <name="Chain Version (Change Version Here)", write=WriteVersion>; // The true chain version
+local uint version <hidden=false> = Version; //the internal chain version for most purposes of this template
+
+FSeek(0);
+
+if (version == 48) {
+    settingSz = 168;
+    chainGrpSz = 112;
+}
+
+if (version == 46) {
+    settingSz = 168;
+    chainGrpSz = 88;
+}
+
+if (version == 35)
+    colSz = 72;
+
+if (version == 24) {
+    colSz = 56;
+    chainGrpSz = 48;
+    nodeSz = 64;
+}
+if (version == 21 || version == 5) {
+    settingSz = 128;
+    colSz = 56;
+    chainGrpSz = 48;
+    nodeSz = 64;
+}
+if (version == 5) {
+    colSz = 48;
+    chainGrpSz = 64;
+    nodeSz = 48;
+}
+
+void WriteVersion(uint32 &v, string s) {
+    version = Version;
+    int newVer = Atoi(s);
+    int settingsDiff, singleSettingsDiff;
+    int colDiff, singleColDiff;
+    int chainGrpDiff, singleChainGrpDiff;
+    int nodeDiff, singleNodeDiff;
+    int multiplier = 1;
+    if (newVer == 21 || newVer == 24) {
+        singleSettingsDiff = (128 + (newVer==24)*32) - settingSz;
+        singleColDiff = 56 - colSz;
+        singleChainGrpDiff = 48 - chainGrpSz;
+        singleNodeDiff = 64 - nodeSz;
+    }
+    if (newVer == 46 || newVer == 39 || newVer == 35 || newVer == 48) {
+        singleSettingsDiff = (160 + (newVer == 46 || newVer == 48)*8) - settingSz;
+        singleColDiff = (80 + -8*(newVer==35)) - colSz;
+        singleChainGrpDiff = (80 + (newVer == 48)*32 + (newVer == 46)*8) - chainGrpSz;
+        singleNodeDiff = 80 - nodeSz;
+    }
+
+    Printf("settingsDiff: %i\n", singleSettingsDiff);
+    Printf("colDiff: %i\n", singleColDiff);
+    Printf("chainGrpDiff: %i\n", singleChainGrpDiff);
+    Printf("nodeDiff: %i\n", singleNodeDiff);
+
+    settingsDiff = singleSettingsDiff * Header.settingCount;
+    colDiff = singleColDiff * Header.modelCollisionCount;
+    chainGrpDiff = singleChainGrpDiff * Header.groupCount;
+    nodeDiff = singleNodeDiff * nodeTotal;
+    
+    Printf("Total SettingsDiff: %i\n", settingsDiff);
+    Printf("Total colDiff: %i\n", colDiff);
+    Printf("Total chainGrpDiff: %i\n", chainGrpDiff);
+    Printf("Total nodeDiff: %i\n", nodeDiff);
+    Printf("Total diff: %i\n", settingsDiff + colDiff + chainGrpDiff + nodeDiff);
+    if (version == 24) {
+        if (newVer == 21) {
+            multiplier = -1;
+        }
+    }
+    if (version == 46 || version == 48 || version == 39 || version == 35) {
+        multiplier = -1;
+    }
+
+    Printf("Multiplier: %i\n", multiplier);
+
+    /*if ((version == 35 && newVer == 39) || (version == 39 && newVer == 35))
+        v = Atoi(s);
+    else */
+    if (Abs(settingsDiff + colDiff + chainGrpDiff + nodeDiff)) 
+    {
+        v = Atoi(s);
+        int paddingBytes = ((Header.groupTbl + settingsDiff + colDiff) % 16) * -multiplier;
+        colDiff += paddingBytes;
+        Printf("paddingBytes: %i\n", paddingBytes);
+        
+        if (Header.modelCollisionTbl)
+            Header.modelCollisionTbl += settingsDiff;
+        if (Header.groupTbl)
+            Header.groupTbl += settingsDiff + colDiff;
+        if (Header.linkTbl)
+            Header.linkTbl += settingsDiff + colDiff + chainGrpDiff + nodeDiff;
+        if (Header.windSettingTbl)
+            Header.windSettingTbl += settingsDiff + colDiff + chainGrpDiff + nodeDiff;
+
+        for (i=0; i<Header.linkCount; i++)
+            if (ChainLinks.ChainLink[i].nodeTbl)
+                ChainLinks.ChainLink[i].nodeTbl += settingsDiff + colDiff + chainGrpDiff + nodeDiff;
+        
+        int tempDiff; //chunks of nodeDiff, by ChainGroup
+        //for (i=Header.groupCount-1; i>=0; i--)
+        for (i=0; i<Header.groupCount; i++) {
+            Printf("TempDiff: %i\n", tempDiff);
+            if (ChainGroups.ChainGroup[i].nodeTbl) 
+                ChainGroups.ChainGroup[i].nodeTbl += settingsDiff + colDiff + chainGrpDiff + tempDiff;
+            ChainGroups.ChainGroup[i].terminalNodeName.offset += settingsDiff + colDiff + chainGrpDiff + tempDiff;
+            if (colDiff + chainGrpDiff + nodeDiff)
+                tempDiff += ChainGroups.ChainGroup[i].nodeCount * singleNodeDiff * multiplier;
+        }
+        
+        for (i=0; i<Header.modelCollisionCount; i++) {
+            if (Collisions.Collision[i].subDataTbl)
+                Collisions.Collision[i].subDataTbl += settingsDiff + colDiff;
+        }
+
+        tempDiff = 0;
+        for (i=0; i<Header.settingCount; i++) 
+            if (ChainSettings.Setting[i].colliderFilterInfoPath.offset)
+               ChainSettings.Setting[i].colliderFilterInfoPath.offset += settingsDiff;
+        
+        if (nodeDiff > 0)
+            for (i=Header.groupCount-1; i>=0; i--)
+                for (j=ChainGroups.ChainGroup[i].nodeCount-1; j>=0; j--) 
+                    InsertBytes(startof(ChainGroups.ChainGroup[i].Node[j])+64, singleNodeDiff, 0);
+        
+        if (chainGrpDiff > 0) {
+            for (i=Header.groupCount-1; i>=0; i--) {
+                InsertBytes(startof(ChainGroups.ChainGroup[i])+48, singleChainGrpDiff, 0);
+                WriteFloat(startof(ChainGroups.ChainGroup[i])+72, 12.56637);
+            }
+            if (paddingBytes) 
+                DeleteBytes(startof(ChainGroups.ChainGroup[0])-8, Abs(paddingBytes));         
+        }
+        
+        if (nodeDiff < 0)
+            for (i=Header.groupCount-1; i>=0; i--)
+                for (j=ChainGroups.ChainGroup[i].nodeCount-1; j>=0; j--) 
+                    DeleteBytes(startof(ChainGroups.ChainGroup[i].Node[j])+64, Abs(singleNodeDiff));
+        
+        if (chainGrpDiff < 0) {
+            for (i=Header.groupCount-1; i>=0; i--) 
+                DeleteBytes(startof(ChainGroups.ChainGroup[i])+48, Abs(singleChainGrpDiff));
+            if (paddingBytes) 
+                InsertBytes(startof(ChainGroups.ChainGroup[0]), Abs(paddingBytes), 0);   
+        }
+        
+        if (colDiff > 0) 
+            for (i=Header.modelCollisionCount-1; i>=0; i--) {
+                if (newVer != 35)
+                    InsertBytes(startof(Collisions.Collision[i])+56, 4, 0);
+                InsertBytes(startof(Collisions.Collision[i].jointNameHash), singleColDiff + (-4 * (newVer != 35)), 0);
+            }
+
+        if (colDiff < 0)
+            for (i=Header.modelCollisionCount-1; i>=0; i--) {
+                if (version != 35)
+                    DeleteBytes(startof(Collisions.Collision[i])+60, 4);
+                DeleteBytes(startof(Collisions.Collision[i].jointNameHash) + (-4 * (version != 35)), Abs(singleColDiff) + (-4 * (version != 35)) ); //
+            }
+        
+        if (settingsDiff < 0) 
+            for (i=Header.settingCount-1; i>=0; i--) {
+                if (newVer < 24) {
+                    if (Abs(singleSettingsDiff) > 32)
+                        DeleteBytes(startof(ChainSettings.Setting[i].hardness)+4, Abs(singleSettingsDiff)-32);
+                    DeleteBytes(startof(ChainSettings.Setting[i].springLimitRate), 12);
+                    DeleteBytes(startof(ChainSettings.Setting[i].minDamping), 20);
+                } else
+                    DeleteBytes(startof(ChainSettings.Setting[i].hardness)+4, Abs(singleSettingsDiff));
+            }
+        
+        if (settingsDiff > 0)
+            for (i=Header.settingCount-1; i>=0; i--) {
+                if (newVer==46 || newVer==48) {
+                    InsertBytes(startof(ChainSettings.Setting[i].hardness)+4, 8, 0);
+                    if (version < 35)
+                        WriteFloat(startof(ChainSettings.Setting[i].hardness)+8, 0.1 );
+                }
+                if (version < 24) {
+                    InsertBytes(startof(ChainSettings.Setting[i].reduceSelfDistanceRate), 12, 0);
+                    InsertBytes(startof(ChainSettings.Setting[i].springForce), 20, 0);
+                    WriteFloat(startof(ChainSettings.Setting[i].secondDampingSpeed)+4, ChainSettings.Setting[i].damping );
+                    WriteFloat(startof(ChainSettings.Setting[i].secondDampingSpeed)+8, ChainSettings.Setting[i].secondDamping);
+                    WriteFloat(startof(ChainSettings.Setting[i].secondDampingSpeed)+12, 1);
+                    WriteFloat(startof(ChainSettings.Setting[i].secondDampingSpeed)+16, 1);
+                }
+            }
+        
+        
+        MessageBox( idOk, "Chain Conversion", "Press F5 to Refresh the template and fix template results");
+    }
+    //Printf("%i\n", colDiff / Header.modelCollisionCount);
+}
+
+enum <uint32> BoneHashes {
+    //Resident Evil:
+	COG = 3425867754,
+	head = 737706723,
+	hips = 2795058024,
+	holster_startleft_muscle = 2506568035,
+	holster_startright_muscle = 1032406871,
+	jointEyeLeft = 3198993277,
+	jointEyeRight = 3098087795,
+	l_arm_clavicle = 2971361680,,
+	l_arm_humerus = 3722817809,
+	l_arm_radius = 862024887,
+	l_arm_wrist = 3949637493,
+	l_breast_00_chain_00 = 2820484370,
+	l_breast_00_chain_end = 3693603730,
+	l_collar_FK_0 = 2486168545,
+	l_collar_FK_1 = 2616227265,
+	l_hand_index_0 = 3630789544,
+	l_hand_index_1 = 2473287197,
+	l_hand_index_2 = 4263029123,
+	l_hand_little_0 = 1701860315,
+	l_hand_little_1 = 4154483602,
+	l_hand_little_2 = 1066433658,
+	l_hand_little_3 = 1693696853,
+	l_hand_middle_0 = 3110766098,
+	l_hand_middle_1 = 102203172,
+	l_hand_middle_2 = 314080914,
+	l_hand_ring_0 = 2720851449,
+	l_hand_ring_1 = 3296217527,
+	l_hand_ring_2 = 945525268,
+	l_hand_ring_3 = 3492964041,
+	l_hand_thumb_0 = 1630233276,
+	l_hand_thumb_1 = 2824751140,
+	l_hand_thumb_2 = 2695019754,
+	l_leg_ankle = 718421727,
+	l_leg_ball = 774556802,
+	l_leg_ballEnd = 2021516519,
+	l_leg_femur = 2896091387,
+	l_leg_tibia = 2433276823,
+	l_scapula_0 = 619320360,
+	l_trapA_muscle = 4069214965,
+	l_trapA_muscleOffset = 2719235399,
+	l_weapon = 1036978550,
+	neck_0 = 3537166074,
+	neck_1 = 10933021,
+	Null_Offset = 1573792880,
+	root = 2879905340,
+	r_arm_clavicle = 3221895761,
+	r_arm_humerus = 1725700276,
+	r_arm_radius = 50800011,
+	r_arm_wrist = 1941587442,
+	r_breast_00_chain_00 = 1331238703,
+	r_breast_00_chain_end = 4050787951,
+	r_collar_FK_0 = 464524947,
+	r_collar_FK_1 = 4003829791,
+	r_hand_index_0 = 3085756385,
+	r_hand_index_1 = 1547833604,
+	r_hand_index_2 = 1733166898,
+	r_hand_little_0 = 1015371196,
+	r_hand_little_1 = 3029243580,
+	r_hand_little_2 = 3276834551,
+	r_hand_little_3 = 506069809,
+	r_hand_middle_0 = 48313152,
+	r_hand_middle_1 = 4231601270,
+	r_hand_middle_2 = 1879303012,
+	r_hand_ring_0 = 657541931,
+	r_hand_ring_1 = 1695043796,
+	r_hand_ring_2 = 3805935542,
+	r_hand_ring_3 = 3330208587,
+	r_hand_thumb_0 = 678831033,
+	r_hand_thumb_1 = 2548756170,
+	r_hand_thumb_2 = 1982140252,
+	r_leg_ankle = 2497187219,
+	r_leg_ball = 2372646773,
+	r_leg_ballEnd = 3633439722,
+	r_leg_femur = 3912596401,
+	r_leg_tibia = 4086384926,
+	r_scapula_0 = 2149740517,
+	r_trapA_muscle = 1787884476,
+	r_trapA_muscleOffset = 3864158639,
+	r_weapon = 3434560371,
+	spine_0 = 830704514,
+	spine_1 = 2157395361,
+	spine_2 = 3007640129,,
+	Teeth = 1258987853,
+	Tongue_01 = 3111751173,
+	Tongue_02 = 4192679175,
+    //DMC5:
+    Hip = 1549972489,
+    Waist = 639293466,
+    Stomach = 1688180870,
+    Chest = 3471977595,
+    Neck = 1743374425,
+    Neck_Middle = 2209682408,
+    Head = 935285574,
+    R_Shoulder = 767461792,
+    R_BA_UpperArmRoot = 3096402156,
+    R_UpperArm = 2725057162,
+    R_Forearm = 608343916,
+    R_Hand = 315581468,
+    R_Palm = 113712880,
+    R_RingF1 = 2574338449,
+    R_RingF2 = 2947256747,
+    R_RingF3 = 2425714680,
+    R_PinkyF1 = 1637529764,
+    R_PinkyF2 = 2483505895,
+    R_PinkyF3 = 4031769476,
+    R_RingF1_rev_top = 20543758,
+    R_PinkyF1_rev_top = 2878548721,
+    R_MiddleF1 = 1579020745,
+    R_MiddleF2 = 960703452,
+    R_MiddleF3 = 4267995190,
+    R_IndexF1 = 1111761943,
+    R_IndexF2 = 2563018743,
+    R_IndexF3 = 4040736898,
+    R_Thumb1 = 3739009151,
+    R_Thumb2 = 3804363179,
+    R_Thumb3 = 3317698597,
+    R_WeaponHand = 3980784493,
+    R_IndexF1_rev_top = 1943275051,
+    R_MiddleF1_rev_top = 3656661298,
+    R_B_UpperArmRoot = 33138851,
+    R_Wing00Root = 4214963530,
+    L_Shoulder = 1913148385,
+    L_BA_UpperArmRoot = 2339832196,
+    L_UpperArm = 1345121450,
+    L_Forearm = 581854075,
+    L_Hand = 682134405,
+    L_Palm = 3323164822,
+    L_RingF1 = 190143090,
+    L_RingF2 = 3781027056,
+    L_RingF3 = 4192168769,
+    L_PinkyF1 = 3505060550,
+    L_PinkyF2 = 3433010367,
+    L_PinkyF3 = 4093523257,
+    L_RingF1_rev_top = 652663646,
+    L_PinkyF1_rev_top = 631793630,
+    L_MiddleF1 = 2746278887,
+    L_MiddleF2 = 3380624320,
+    L_MiddleF3 = 682508210,
+    L_IndexF1 = 2148146560,
+    L_IndexF2 = 2923866148,
+    L_IndexF3 = 2366532009,
+    L_Thumb1 = 1182223167,
+    L_Thumb2 = 4222396361,
+    L_Thumb3 = 4066935724,
+    L_WeaponHand = 3882907520,
+    L_IndexF1_rev_top = 3641230570,
+    L_MiddleF1_rev_top = 1016754300,
+    L_B_UpperArmRoot = 181733660,
+    L_Wing00Root = 1096447236,
+    WeaponConst = 766838008,
+    L_Thigh = 71627664,
+    L_Shin = 198352382,
+    L_Foot = 1292767429,
+    L_Foot_twist = 2128161134,
+    L_Toe = 2280731798,
+    R_Thigh = 2743772797,
+    R_Shin = 2925717275,
+    R_Foot = 549260636,
+    R_Foot_twist = 3108076359,
+    R_Toe = 829768755,
+    Head_Direction = 625417964,
+    //MHRise:
+    Root = 4175418299,
+    Cog = 3903073785,
+    Waist_00 = 3481386965,
+    Spine_00 = 3965005683,
+    Spine_01 = 4190776307,
+    Neck_00 = 2995001885,
+    Head_00 = 2977275463,
+    Neck_00_S = 3132054163,
+    L_Arm_00 = 3606226760,
+    L_Arm_01 = 909163982,
+    L_Arm_02 = 1282000133,
+    L_Arm_03 = 3889292925,
+    L_Weapon_00 = 2019950878,
+    L_Finger_00 = 550474555,
+    L_Finger_01 = 3308273452,
+    L_Finger_02 = 73619378,
+    L_Finger_03 = 1343309282,
+    L_Finger_04 = 3771202794,
+    L_Finger_05 = 2981352608,
+    L_Finger_06 = 3125427915,
+    L_Finger_07 = 205182993,
+    L_Finger_08 = 4077460497,
+    L_Finger_09 = 1673917508,
+    L_Finger_10 = 183519729,
+    L_Finger_11 = 531012049,
+    L_Finger_12 = 3601842582,
+    L_Finger_13 = 930933720,
+    L_Finger_14 = 1023579824,
+    L_Finger_15 = 2082578126,
+    L_Arm_02_T = 198401008,
+    L_Arm_01_W = 747557838,
+    L_Arm_01_T = 2656396679,
+    L_Arm_00_W = 3262064587,
+    R_Arm_00 = 28493395,
+    R_Arm_01 = 3742293973,
+    R_Arm_02 = 44804614,
+    R_Arm_03 = 2595698164,
+    R_Weapon_00 = 2841070534,
+    R_Finger_00 = 779203389,
+    R_Finger_01 = 4202889748,
+    R_Finger_02 = 109353828,
+    R_Finger_03 = 1302842690,
+    R_Finger_04 = 480055981,
+    R_Finger_05 = 2822438682,
+    R_Finger_06 = 3569198553,
+    R_Finger_07 = 1004415074,
+    R_Finger_08 = 850788577,
+    R_Grip_00 = 3386320961,
+    R_Finger_09 = 3311382476,
+    R_Finger_10 = 2244960060,
+    R_Finger_11 = 3382214578,
+    R_Finger_12 = 2648861038,
+    R_Finger_13 = 2952252466,
+    R_Finger_14 = 258870766,
+    R_Arm_02_T = 712603515,
+    R_Arm_01_W = 2412019319,
+    R_Arm_01_T = 2382639687,
+    R_Arm_00_W = 3676887802,
+    R_Hand_IK = 1012530086,
+    L_Hand_IK = 1700329731,
+    L_Leg_00 = 1597861637,
+    L_Leg_01 = 3706547970,
+    L_Leg_02 = 896651803,
+    L_Leg_03 = 2117579620,
+    L_Leg_02_T = 3784694530,
+    L_Leg_01_W = 3331967975,
+    L_Leg_00_W = 3059279996,
+    R_Leg_00 = 1493091133,
+    R_Leg_01 = 1806328285,
+    R_Leg_02 = 1817782392,
+    R_Leg_03 = 4000363211,
+    R_Leg_02_T = 2768102911,
+    R_Leg_01_W = 213866037,
+    R_Leg_00_W = 3847992535,
+    R_Foot_IK = 1595776407,
+    L_Foot_IK = 2540998253,
+    Face_Parts = 2416820057,
+    LookAt = 701895665,
+    PL_Cam = 3426171872,
+};
+
+enum <int32> AttrFlags {
+    AttrFlags_None = 0x0,
+    AttrFlags_RootRotation = 0x1,
+    AttrFlags_AngleLimit = 0x2,
+    AttrFlags_ExtraNode = 0x4,
+    AttrFlags_CollisionDefault = 0x8,
+    AttrFlags_CollisionSelf = 0x10,
+    AttrFlags_CollisionModel = 0x20,
+    AttrFlags_CollisionVGround = 0x40,
+    AttrFlags_CollisionCollider = 0x80,
+    AttrFlags_CollisionGroup = 0x100,
+    AttrFlags_EnablePartBlend = 0x200,
+    AttrFlags_WindDefault = 0x400,
+    AttrFlags_TransAnimation = 0x800,
+    AttrFlags_AngleLimitRestitution = 0x1000,
+    AttrFlags_StretchBoth = 0x2000,
+    AttrFlags_EndRotConstraint = 0x4000,
+};
+
+enum <ubyte> RotationOrder{
+    RotationOrder_XYZ = 0x0,
+    RotationOrder_YZX = 0x1,
+    RotationOrder_ZXY = 0x2,
+    RotationOrder_ZYX = 0x3,
+    RotationOrder_YXZ = 0x4,
+    RotationOrder_XZY = 0x5,
+};
+
+string Lower(string s) {
+    local int k;
+    local string s2 = s;
+    for (k=0; k < sizeof(s); k++)
+        s2[k] = ToLower(s[k]);
+    return s2;
+}
+
+int detectedString(uint64 offset) { 
+    if (offset+6 <= FileSize())
+        if (ReadByte(offset) != 0 && ReadByte(offset + 1) == 0) 
+            if (ReadByte(offset + 2) != 0 && ReadByte(offset + 3) == 0)
+                if (ReadByte(offset + 4) != 0) // && ReadByte(offset + 5) == 0
+                    return true;
+    return false;
+}
+
+int doesExist(string str, string term) {
+    local int matchSize;
+    return RegExSearch(str, term, matchSize, 0);
+}
+
+typedef ubyte BOOL <read=ReadBOOL, write=WriteBOOL>;
+
+string ReadBOOL(BOOL &b) {
+    if (b == 1)
+        return "True";
+    return "False";
+}
+
+void WriteBOOL(BOOL &b, string s) {
+    if (doesExist(Lower(s), "true") != -1 || Atoi(s) >= 1)
+        b = 1;
+    else b = 0;
+}
+
+typedef byte BLANK <name=readBLANK, read=readBLANK>;
+
+string readBLANK(BLANK &ref) { FSeek(startof(ref)); return " ";}
+
+void blank() { BLANK blank; FSkip(-1); }
+
+struct Hash {
+    int32 hash;
+    local string name = "Name not found!";
+    for (i=0; i<Header.groupCount; i++)
+        if (exists(ChainGroups.ChainGroup[i]) && hash_wide((string)ChainGroups.ChainGroup[i].terminalNodeName.name) == hash) {
+            name = ChainGroups.ChainGroup[i].terminalNodeName.name;
+            break;
+        }
+};
+
+string ReadHash (Hash &h) {
+    string s;
+    SPrintf(s, "%u  ( %s )", h.hash, h.name);
+    return s;
+}
+
+void WriteHash (Hash &h, string s) {
+    h.hash = Atoi(s);
+}
+
+typedef struct {
+    uint64 offset;
+    if (offset) {
+        FSeek(offset);
+        wstring name;
+        FSeek(startof(offset)+8);
+        local uint Expected_Hash = hash_wide((string)name);
+    } else 
+        local wstring name = "";
+    
+} StringOffset <optimize=false, read=ReadOffset, write=WriteOffset>;
+
+string ReadOffset(StringOffset &o) { 
+    if (exists(o.name) && o.name != "")
+        return o.name;
+    string s; 
+    SPrintf(s, "%u", ReadUInt64(startof(o))); 
+    return s; 
+}
+
+void WriteOffset(StringOffset &o, wstring s) { 
+    if (exists(o.name)) {
+        OverwriteBytes(startof(o.name), sizeof(o.name), 0); 
+        WriteWString(startof(o.name), s); 
+        if (sizeof(s) <= sizeof(o.name))
+            o.name = s;
+    } else 
+        o.offset = Atoi(s);
+    o.Expected_Hash = hash_wide((string)s);
+}
+
+void WriteBoneName (StringOffset &b, string s) {
+    parentof(b).terminalNameHash = hash_wide(s);
+    WriteOffset(b, (wstring)s);
+}
+
+struct Float3 {
+    float x;
+    float y;
+    float z;
+};
+
+struct Float4 {
+    float x;
+    float y;
+    float z;
+    float w;
+};
+
+struct Float5{
+    float mBuffer;
+    float mBuffer;
+    float mBuffer;
+    float mBuffer;
+    float mBuffer;
+};
+
+struct ChainSubCollisionData {
+    if (version >= 35) {
+        Float3 pos;
+        Float3 pairPos;
+        Float4 rotOffset;
+        float radius;
+    } else {
+        Float3 pos;
+        float radius;
+        Float3 pairPos;
+    }
+    int id;
+};
+
+struct Quaternion {
+    float x;
+    float y;
+    float z;
+    float w;
+};
+
+struct vec3 {
+  float x;
+  float y;
+  float z;
+  float pad_;
+};
+
+//Murmur3 hash generation by Darkness:
+uint32 fmix32(uint32 h){
+    h ^= h >> 16;
+    h *= 0x85ebca6b;
+    h ^= h >> 13;
+    h *= 0xc2b2ae35;
+    h ^= h >> 16;
+    return h;
+}
+
+uint32 mmh3 (byte key[], uint32 length , uint32 seed){
+    local uint64 block_start<hidden=true>;
+    local const uint nBlocks = length / 4;
+    local uint32 h1 = seed;
+    
+    local const uint32 c1 = 0xcc9e2d51;
+    local const uint32 c2 = 0x1b873593;
+
+    local uint32 k1;
+    for(block_start = 0; block_start < nBlocks * 4; block_start+= 4){
+        k1 = (uint32)key[block_start + 3] << 24 | \
+             (uint32)key[block_start + 2] << 16 | \
+             (uint32)key[block_start + 1] << 8 | \
+             (uint32)key[block_start + 0];
+
+        k1 = (c1 * k1) & 0xFFFFFFFF;
+        k1 = (k1 << 15 | k1 >> 17) & 0xFFFFFFFF;
+        k1 = (c2 * k1) & 0xFFFFFFFF;
+
+        h1 ^= k1;
+        h1 = (h1 << 13 | h1 >> 19) & 0xFFFFFFFF;
+        h1 = (h1 * 5 + 0xe6546b64) & 0xFFFFFFFF;
+    }
+
+    local uint32 tail_index = nBlocks * 4;
+    k1 = 0;
+    local uint32 tail_size = length & 3;
+
+    if(tail_size >= 3)
+        k1 ^= (uint32)key[tail_index + 2] << 16;
+    if(tail_size >= 2)
+        k1 ^= (uint32)key[tail_index + 1] << 8;
+    if(tail_size >= 1)
+        k1 ^= (uint32)key[tail_index + 0];
+
+    if(tail_size > 0){
+        k1 = (k1 * c1) & 0xFFFFFFFF;
+        k1 = (k1 << 15 | k1 >> 17) & 0xFFFFFFFF;
+        k1 = (k1 * c2) & 0xFFFFFFFF;
+        h1 ^= k1;
+    }
+
+    return fmix32(h1 ^ length);
+}
+
+uint32 hash_wide(string key){
+    local uint64 it<hidden=true>;
+    local const uint length = Strlen(key) * 2;
+    if (length) {
+        local byte key_array[length];
+        for(it = 0; it < length; it += 2){
+            key_array[it] = key[it / 2];
+            key_array[it + 1] = 0;
+        }
+        return mmh3(key_array, length, 0xFFFFFFFF);
+    } return 0;
+}
+
+//================================================== start
+
+SetForeColor(cLtGreen);
+struct ChainData {
+    uint version;
+    uint magic;
+    enum {
+        ErrFlags_None = 0x0,
+        ErrFlags_Empty = 0x1,
+        ErrFlags_NotFoundRefAsset = 0x2,
+        ErrFlags_NotFoundIncludeAsset = 0x4,
+    } ErrFlags;
+    uint masterSize;
+    StringOffset collisionAttrAsset;
+    uint64 modelCollisionTbl;
+    StringOffset extraData;
+    uint64 groupTbl;
+    uint64 linkTbl;
+    uint64 settingTbl;
+    uint64 windSettingTbl;
+    char groupCount;
+    char settingCount;
+    char modelCollisionCount;
+    char windSettingCount;
+    char linkCount;
+    RotationOrder execOrderMax;
+    char defaultSettingIdx;
+    enum <byte> {
+        CalculateMode_Default = 0x0,
+        CalculateMode_Performance = 0x1,
+        CalculateMode_Balance = 0x2,
+        CalculateMode_Quality = 0x3,
+    } calculateMode;
+    enum {
+        ChainAttrFlags_None = 0x0,
+        ChainAttrFlags_ModelCollisionPreset = 0x1,
+    } ChainAttrFlags;
+    enum ChainParamFlags {
+        ChainParamFlags_None = 0x0,
+        ChainParamFlags_ReflectEnviromental = 0x1,
+    } parameterFlag;
+    float calculateStepTime;
+    BOOL modelCollisionSearch;
+    enum <byte> {
+        LegacyVersion_Latest = 0x0,
+        LegacyVersion_Legacy1 = 0x1,
+    } LegacyVersion;
+    uint16 padding <hidden=true>;
+    if (version != 5)
+        enum <byte> HitFlags {
+            HitFlags_None = 0x0,
+            HitFlags_Self = 0x2,
+            HitFlags_Model = 0x4,
+            HitFlags_Collider = 0x8,
+            HitFlags_Angle = 0x10,
+            HitFlags_Group = 0x20,
+            HitFlags_VGround = 0x40,
+            HitFlags_Collision = 0x6E,
+        } collisionFilterHit[8];
+} Header;
+
+typedef struct {
+    local int index <hidden=true> = i;
+    FSeek(Header.groupTbl);
+    for(j = 0; j < Header.groupCount; j++)
+        if (ReadUInt(Header.groupTbl + j * chainGrpSz + 16) == index) {
+            struct {
+                local uint jointCount <hidden=true>;
+                for(j = 0; j < Header.groupCount; j++)
+                    if (ReadUInt(Header.groupTbl + j * chainGrpSz + 16) == index) {
+                        FSeek(Header.groupTbl + j * chainGrpSz);
+                        StringOffset Joint;
+                        jointCount++;
+                    }
+            } Joints;
+            break;
+        } 
+    FSeek(startof(this));
+    StringOffset colliderFilterInfoPath;
+    
+    struct {
+        float arc;
+        float frequency;
+        float curve1;
+        float curve2;
+    } SprayParameter;
+    uint id;
+    enum <byte> {
+        ChainType_Chain = 0x0,
+        ChainType_Shooter = 0x1,
+    } chainType;
+    enum <byte> {
+        SettingAttrFlags_None = 0x0,
+        SettingAttrFlags_Default = 0x1,
+        SettingAttrFlags_VirtualGroundRoot = 0x2,
+        SettingAttrFlags_VirtualGroundTarget = 0x4,
+        SettingAttrFlags_IgnoreSameGroupCollision = 0x8,
+        SettingAttrFlags_VirtualGroundMask = 0x6,
+    } SettingAttrFlags;
+    enum <byte> {
+        DirectionOfEmission_Global = 0x0,
+        DirectionOfEmission_Local = 0x1,
+        DirectionOfEmission_GroupLocal = 0x2,
+    } muzzleDirection;
+    char windId;
+    Float3 gravity;
+    Float3 muzzleVelocity;
+    float damping;
+    float secondDamping;
+    float secondDampingSpeed;
+    if (version >= 24) {
+        float minDamping;
+        float secondMinDamping;
+        float dampingPow;
+        float secondDampingPow;
+        float collideMaxVelocity;
+    }
+    float springForce;
+    if (version >= 24) {
+        float springLimitRate;
+        float springMaxVelocity;
+        enum <byte> {
+            ChainSpringCalcType_Position = 0x0,
+            ChainSpringCalcType_Rotation = 0x1,
+        } springCalcType;
+        char padding0 <hidden=true>;
+        char padding1 <hidden=true>;
+        char padding2 <hidden=true>;
+    }
+    float reduceSelfDistanceRate;
+    float secondReduceDistanceRate;
+    float secondReduceDistanceSpeed;
+    float friction;
+    float shockAbsorptionRate;
+    float coefOfElasticity;
+    float coefOfExternalForces;
+    float stretchInteractionRatio;
+    float angleLimitInteractionRatio;
+    float shootingElasticLimitRate;
+    AttrFlags groupDefaultAttr;
+    float windEffectCoef;
+    float velocityLimit;
+    float hardness;
+    if (version >= 46) {
+        float ukn0;
+        float ukn1;
+    }
+    /*if (version >= 48) {
+        float ukn2;
+        float ukn3;
+    }*/
+} ChainSetting <read=ReadChainSetting>;
+
+    string ReadChainSetting(ChainSetting &c) {
+        local string s;
+        if (exists(c.Joints))
+            for (i=0; i<c.Joints.jointCount; i++)
+                s = s + ReadOffset(c.Joints.Joint[i]) + ", ";
+        return s;
+    }
+
+if (Header.settingTbl) {
+    FSeek(Header.settingTbl);
+    struct {
+        for (i=0; i<Header.settingCount; i++) {
+            FSeek(Header.settingTbl + settingSz * i);
+            ChainSetting Setting;
+        }
+    } ChainSettings;
+}
+
+FSeek(Header.modelCollisionTbl);
+if (Header.modelCollisionTbl && Header.modelCollisionCount)
+    struct {
+        struct ChainCollisionData {
+            uint64 subDataTbl;
+            Float3 pos;
+            Float3 pairPos;
+            if (version == 48 || version == 46 || version == 39 || version == 35) {
+                Float4 rotOffset;
+                if (version == 48 || version == 46 || version == 39) {
+                    RotationOrder order;
+                    FSkip(3);
+                }
+            }
+            BoneHashes jointNameHash;
+            BoneHashes pairJointNameHash;
+            float radius;
+            float lerp;
+            if (version >= 48)
+                float ukn;
+            if (version != 5) {
+                enum <byte> ChainCollisionShape {
+                    ChainCollisionShape_None = 0x0,
+                    ChainCollisionShape_Sphere = 0x1,
+                    ChainCollisionShape_Capsule = 0x2,
+                    ChainCollisionShape_OBB = 0x3,
+                    ChainCollisionShape_Plane = 0x4,
+                    ChainCollisionShape_LineSphere = 0x5,
+                    ChainCollisionShape_LerpSphere = 0x6,
+                } shape;
+                char div;
+                char subDataCount;
+                char empty0 <hidden=true>;
+                enum <int32> CollisionFilterFlags {
+                    ChainCollisionType_Self = 0x0,
+                    ChainCollisionType_Model = 0x1,
+                    ChainCollisionType_Collider = 0x2,
+                    ChainCollisionType_VGround = 0x3,
+                } collisionFilterFlags;
+                if (version == 48 || version == 46 || version == 39 || version == 35)
+                    uint padding0 <hidden=true>;
+                if (subDataTbl) {
+                    FSeek(subDataTbl);
+                    struct ChainSubCollisionData ChainSubCollision[subDataCount] <optimize=false>;
+                }
+            }
+            FSeek(startof(this)+colSz);
+        } Collision[Header.modelCollisionCount] <optimize=false, read=ReadChainCollisionData>;
+    } Collisions;
+    
+    string ReadChainCollisionData(ChainCollisionData &c) { 
+        local string str = EnumToString(c.jointNameHash); 
+        if (c.pairJointNameHash)
+            return str + " <--> " + EnumToString(c.pairJointNameHash); 
+        return str;
+    }
+
+struct ChainNodeData {
+    local int index <hidden=true> = i;
+    Quaternion angleLimitDirection;
+    float angleLimitRad;
+    float angleLimitDistance;
+    float angleLimitRestitution;
+    float angleLimitRestituteStopSpeed;
+    float collisionRadius;
+    CollisionFilterFlags collisionFilterFlags;
+    float capsuleStretchRate;
+    float capsuleStretchRate;
+    AttrFlags attributeFlag;
+    BoneHashes constraintJntNameHash;
+    float windCoef;
+    enum <ubyte> {
+        AngleMode_Free = 0x0,
+        AngleMode_LimitCone = 0x1,
+        AngleMode_LimitHinge = 0x2,
+        AngleMode_LimitConeBox = 0x3,
+        AngleMode_LimitOval = 0x4,
+        AngleMode_LimitElliptic = 0x5,
+    } angleMode;
+    enum <byte> {
+        ChainNodeCollisionShape_None = 0x0,
+        ChainNodeCollisionShape_Sphere = 0x1,
+        ChainNodeCollisionShape_Capsule = 0x2,
+        ChainNodeCollisionShape_StretchCapsule = 0x3,
+    } collisionShape;
+    char attachType;
+    char rotationType;
+    if (version == 46 || version == 39 || version == 35) {
+        uint64 jiggleData;
+        uint64 padding <hidden=true>;
+        if (jiggleData && jiggleData + 72 <= FileSize()) {
+            FSeek(jiggleData);
+            struct ChainJiggleData {
+                vec3 range;
+                vec3 rangeOffset;
+                Quaternion rangeAxis;
+                enum ChainJiggleRangeShape {
+                    ChainJiggleRangeShape_None = 0x0,
+                    ChainJiggleRangeShape_OBB = 0x1,
+                    ChainJiggleRangeShape_Sphere = 0x2,
+                    ChainJiggleRangeShape_Cone = 0x3,
+                } rangeShape;
+                float springForce;
+                float gravityCoef;
+                float damping;
+                AttrFlags flags;
+                unsigned int padding <hidden=true>;
+            } ChainJiggle;
+        }
+    }
+    float ukn[4];
+    FSeek(startof(this)+nodeSz);
+};
+
+string ReadChainNodeData(ChainNodeData &c) {
+    string s, bnName;
+    uint32 nodeCount; 
+    if (exists(parentof(c).nodeCount)) {
+        nodeCount = parentof(c).nodeCount;
+        bnName = parentof(c).terminalNodeName.name;
+    } else {
+        nodeCount = parentof(c).subNode.index+1;
+        bnName = parentof(c).subTerminalNodeName;
+    }
+    if (c.index == nodeCount-1)
+        return bnName;
+    else if (doesExist(bnName, "_end") != -1) {
+        s = SubStr( bnName, 0, Strlen(bnName) - 3);
+        if (c.index != nodeCount-1) {
+            if (c.index < 10)
+                SPrintf(s, "%s0%u", s, c.index);
+            else 
+                SPrintf(s, "%s%u", s, c.index);
+        }
+        return s;
+    }
+    s = SubStr( bnName, 0, Strlen(bnName) - 1);
+    SPrintf(s, "%s%u", s, c.index);
+    return s;
+}
+
+struct ChainGroupData {
+    StringOffset terminalNodeName <write=WriteBoneName>;
+    uint64 nodeTbl;
+    uint settingID;
+    char nodeCount;
+    RotationOrder execOrder; 
+    char autoBlendCheckNodeNo;
+    char windID;
+    BoneHashes terminalNameHash;
+    AttrFlags attrFlags;
+    CollisionFilterFlags collisionFilterFlags;
+    Float3 extraNodeLocalPos;
+    if (version == 46 || version == 48 || version == 39 || version == 35) {
+        uint tags[4];
+        float dampingNoise, dampingNoise;
+        float endRotConstMax;
+        char tagCount;
+        enum <byte> AngleLimitDirectionMode {
+            AngleLimitDirectionMode_BasePose = 0x0,
+            AngleLimitDirectionMode_MotionPose = 0x1,
+        } angleLimitDirectionMode;
+        uint16 padding0 <hidden=true>;
+    }
+    if (Version == 48)
+        uint64 uknI64_00;
+    if (version == 5) {
+        float ukn;
+        Float3 ukn2;
+    }
+    
+    if (Version == 48) {
+        BoneHashes unknownBoneHash;
+        uint32 unknown;
+        uint64 unknownI64;
+        /*if (nextNodeOffs+nodeSz <= FileSize()) {
+            FSeek(nextNodeOffs);
+            ChainNodeData nextNode;
+        }*/
+    }
+    if (version == 46 || Version == 48){
+        //uint64 subChainsOffs;
+        StringOffset nextChainName;
+    }
+
+    if (nodeTbl > 0) {
+        FSeek(nodeTbl);
+        nodeTotal += nodeCount;
+        for (i=0; i<nodeCount; i++)
+            ChainNodeData Node <read=ReadChainNodeData>;
+    }
+    
+    /*if (version == 46) {
+        FSeek(subChainsOffs);
+        struct SubChain {
+            wstring subTerminalNodeName;
+            i=0;
+            local uint subNodeCount;
+            while(FTell() % 16 != 0) 
+                FSkip(1);
+            while(FTell() + nodeSz <= FileSize() && !detectedString(FTell())) {
+                nodeTotal += 1; 
+                ChainNodeData subNode <read=ReadChainNodeData>;
+                i++;
+            }
+            subNodeCount = i;
+        } subChain <read=ReadSubChain, optimize=false>; //[nodeCount]
+        
+    }*/
+    FSeek(startof(this)+chainGrpSz);
+    blank();
+}; 
+
+//string ReadSubChain(SubChain &c) {
+//    return c.subTerminalNodeName;
+//}
+
+FSeek(Header.groupTbl);
+if (Header.groupTbl && Header.groupCount)
+    struct {
+        ChainGroupData ChainGroup[Header.groupCount] <read=ReadChainGroup, optimize=false>;
+    } ChainGroups;
+
+string ReadChainGroup(ChainGroupData &c) { return c.terminalNodeName.name; }
+
+struct WindSetting {
+    if (version != 5) {
+        uint id;
+        for(j = 0; j < Header.settingCount; j++) {
+            if (ReadUByte(Header.settingTbl + j * settingSz + 31) == id) {
+                FSeek(Header.settingTbl + j * settingSz);
+                ChainSetting Setting;
+            }
+        }
+    
+        FSeek(Header.groupTbl);
+        for(j = 0; j < Header.groupCount; j++)
+            if (ReadUByte(Header.groupTbl + j * chainGrpSz + 23) == id) {
+                struct {
+                    for(j = 0; j < Header.groupCount; j++) {
+                        if (ReadUByte(Header.groupTbl + j * chainGrpSz + 23) == id) {
+                            FSeek(Header.groupTbl + j * chainGrpSz);
+                            StringOffset Joint;
+                        }
+                    }
+                } Joints;
+                break;
+            }
+        FSeek(startof(id) + 4);
+    
+        enum <byte> {
+            WindDirection_Global = 0x0,
+            WindDirection_Local = 0x1,
+        } windDirection;
+        char windCount;
+        enum <byte> {
+            WindType_None = 0x0,
+            WindType_WindOrSpring = 0x1,
+            WindType_GravityWave = 0x2,
+            WindType_WindWave = 0x3,
+        } WindType;
+        char empty <hidden=true>;
+        float randomDamping;
+        float randomDampingCycle;
+        float randomCycleScaling;
+        uint reserved <hidden=true>;
+        struct {
+            Float3 direction[5] <optimize=false, open=true>;
+            blank();
+        } directions;
+        Float5 min;
+        Float5 max;
+        Float5 phaseShift;
+        Float5 cycle;
+        Float5 interval;
+    } else {
+        for(i = 0; i < Header.windSettingCount; i++){
+            struct{
+                ubyte ukn[4];
+                ubyte directionBytes[4];
+				local uint tmp <hidden=true> = 0; 
+				tmp = 1; 
+                FSkip(4);
+                struct {
+                    float ukn0 <name="Force?">;
+                    if (!tmp) float ukn1;
+                    float ukn2 <name="Counter force?"> ;
+                    float ukn3 <name="Freedom Of Motion?"> ;
+                } Unknown[11 + tmp] <optimize=true>;
+            } floats <open=true, name="Floats">;
+        }
+    }
+};
+
+FSeek(Header.windSettingTbl);
+if (Header.windSettingTbl && Header.windSettingCount)
+    if (Header.windSettingCount == 1)
+        WindSetting Wind[Header.windSettingCount] <optimize=false>;
+    else 
+        struct {
+            WindSetting Wind[Header.windSettingCount] <optimize=false>;
+        } Wind;
+
+struct ChainLinkData {
+    uint64 nodeTbl;
+    BoneHashes terminalNodeNameAHash; //<read=ReadHash, write=WriteHash>;
+    BoneHashes terminalNodeNameBHash; //<read=ReadHash, write=WriteHash>;
+    float distanceShrinkLimitCoef;
+    float distanceExpandLimitCoef;
+    enum <ubyte>  {
+        LinkMode_TopToBottom = 0x0,
+        LinkMode_BottomToTop = 0x1,
+        LinkMode_Manual = 0x2,
+    } LinkMode;
+    enum <byte> {
+        ConnectionFlags_Neighbour = 0x1,
+        ConnectionFlags_Upper = 0x2,
+        ConnectionFlags_Bottom = 0x4,
+    } connectFlags;
+    enum <ushort> {
+        AttrFlags_EnableStretch = 0x1,
+    } linkAttrFlags;
+    char nodeTblCount;
+    char skipGroupA;
+    char skipGroupB;
+    RotationOrder linkOrder;
+    if (nodeTbl && nodeTblCount && (nodeTbl + (nodeTblCount * 8) <= FileSize())) {
+        FSeek(nodeTbl);
+        struct ChainLinkNodeData {
+            float collisionRadius;
+            CollisionFilterFlags collisionFilterFlags;
+        } ChainLinkNode[nodeTblCount] <read=ReadChainLinkNodeData>;
+    }
+    FSeek(startof(linkOrder)+1);
+}; 
+
+FSeek(Header.linkTbl);
+if (Header.linkTbl && Header.linkCount)
+    struct {
+        ChainLinkData ChainLink[Header.linkCount] <optimize=false>;
+    } ChainLinks;
+
+string ReadChainLinkNodeData (ChainLinkNodeData &c) { string s; SPrintf(s, "%g", c.collisionRadius); return s; } 

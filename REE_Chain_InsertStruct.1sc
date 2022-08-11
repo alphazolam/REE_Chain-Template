@@ -1,0 +1,100 @@
+//------------------------------------------------
+//--- 010 Editor v9.0.2 Script File
+//
+//      File: REE_Chain_InsertStruct.1sc
+//   Authors: alphaZomega
+//   Version: 0.2
+//   Purpose: Select somewhere in the chain template and run script to add a new element of that struct 
+//  Category: RE Engine
+//   History: August 16, 2021 
+//------------------------------------------------
+RunTemplate("",0);
+
+local int i, j, k;
+local int cpos = GetSelStart();
+local int insertPos, secondInsertPos, insertSz;
+local int type = -1;
+local int nodesToInsert;
+
+if (exists(ChainSettings) && cpos >= startof(ChainSettings) && cpos < startof(ChainSettings) + sizeof(ChainSettings)) {
+    type = 0;
+    insertPos = startof(ChainSettings) + sizeof(ChainSettings);
+    insertSz = settingSz;
+} else if (exists(Collisions) && cpos >= startof(Collisions) && cpos < startof(Collisions) + sizeof(Collisions)) {
+    type = 1;
+    insertPos = startof(Collisions) + sizeof(Collisions);
+    insertSz = colSz;
+} else if (exists(ChainGroups) && cpos >= startof(ChainGroups) && cpos < startof(ChainGroups) + sizeof(ChainGroups)) {
+    type = 2;
+    insertPos = startof(ChainGroups) + sizeof(ChainGroups);
+    insertSz = chainGrpSz;
+    //nodesToInsert = InputNumber("Input nodes", "Input your nodes", "1");
+    //char bnHeaderBytes[bnHeaderSz];
+    //char bnBytes[(bnDataSz * ChainGroups.ChainGroup[copyFrom].nodeCount)];
+    //secondInsertPos = 
+} else if (exists(Wind) && cpos >= startof(Wind) && cpos < startof(Wind) + sizeof(Wind)) {
+    type = 3;
+    insertPos = startof(Wind) + sizeof(Wind);
+    insertSz = 184;
+} else if (exists(ChainLinks) && cpos >= startof(ChainLinks) && cpos < startof(ChainLinks) + sizeof(ChainLinks)) {
+    type = 4;
+    insertPos = startof(ChainLinks) + sizeof(ChainLinks);
+    insertSz = 32;
+}
+
+local int paddingSz = (insertPos % 16) + ((insertPos + insertSz) % 16);
+if (paddingSz == 16) 
+    paddingSz = 0;
+insertSz += paddingSz;
+
+if (type != -1) {
+    if (Header.linkTbl) {
+        if (type < 4)
+            Header.linkTbl += insertSz;
+        for (i=0; i<Header.linkCount; i++)
+            if (ChainLinks.ChainLink[i].nodeTbl)
+                ChainLinks.ChainLink[i].nodeTbl += insertSz;
+    }
+    if (type < 3) {
+        if (Header.windSettingTbl)
+            Header.windSettingTbl += insertSz;
+        if (Header.groupTbl) {
+            for (i=0; i<Header.groupCount; i++) {
+                if (ChainGroups.ChainGroup[i].terminalNodeName.offset) 
+                    ChainGroups.ChainGroup[i].terminalNodeName.offset += insertSz;
+                if (ChainGroups.ChainGroup[i].nodeTbl) 
+                    ChainGroups.ChainGroup[i].nodeTbl += insertSz;
+            }
+        }
+    }
+    if (type < 2) {
+        if (Header.groupTbl) {
+            Header.groupTbl += insertSz;
+        }
+        if (Header.modelCollisionTbl) {
+            for (i=0; i<Header.modelCollisionCount; i++)
+                if (Collisions.Collision[i].subDataTbl)
+                    Collisions.Collision[i].subDataTbl += insertSz;
+        }
+    }
+    if (type < 1) {
+        if (Header.modelCollisionTbl) 
+            Header.modelCollisionTbl += insertSz;
+        if (Header.settingCount) 
+            for (i=0; i<Header.settingCount; i++) 
+                if (ChainSettings.Setting[i].colliderFilterInfoPath.offset)
+                   ChainSettings.Setting[i].colliderFilterInfoPath.offset += insertSz;
+    }
+}
+
+InsertBytes(insertPos, insertSz, 0);
+
+switch (type) {
+    case 0: Header.settingCount += 1; MessageBox( idOk, "Insert Chain Struct", "Inserted Chain Settings Group"); break;
+    case 1: Header.modelCollisionCount += 1; MessageBox( idOk, "Insert Chain Struct", "Inserted Chain Collision"); break;
+    case 2: Header.groupCount += 1; MessageBox( idOk, "Insert Chain Struct", "Inserted Chain Group (No Nodes)"); break;
+    case 3: Header.windSettingCount += 1; MessageBox( idOk, "Insert Chain Struct", "Inserted WindSetting"); break;
+    case 4: Header.linkCount += 1; MessageBox( idOk, "Insert Chain Struct", "Inserted ChainLink"); break;
+    default: break;
+}
+RunTemplate("", 0);
