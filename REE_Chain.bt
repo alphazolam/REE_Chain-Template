@@ -3,12 +3,12 @@
 //
 //      File: REE_Chain.bt
 //   Authors: alphaZomega
-//   Version: 1.43
+//   Version: 1.42
 //   Purpose: RE Engine Chain file editing
 //  Category: RE Engine
 // File Mask: *.chain.*
 //  ID Bytes: [+4]63 68 61 6E
-//   History: July 2, 2022
+//   History: July 1, 2022
 //------------------------------------------------
 LittleEndian();
 
@@ -220,168 +220,168 @@ void WriteVersion(uint32 &v, string s) {
 }
 
 enum <uint32> BoneHashes {
-    //Resident Evil:
-	COG = 3425867754,
-	head = 737706723,
-	hips = 2795058024,
-	holster_startleft_muscle = 2506568035,
-	holster_startright_muscle = 1032406871,
-	jointEyeLeft = 3198993277,
-	jointEyeRight = 3098087795,
-	l_arm_clavicle = 2971361680,,
-	l_arm_humerus = 3722817809,
-	l_arm_radius = 862024887,
-	l_arm_wrist = 3949637493,
-	l_breast_00_chain_00 = 2820484370,
-	l_breast_00_chain_end = 3693603730,
-	l_collar_FK_0 = 2486168545,
-	l_collar_FK_1 = 2616227265,
-	l_hand_index_0 = 3630789544,
-	l_hand_index_1 = 2473287197,
-	l_hand_index_2 = 4263029123,
-	l_hand_little_0 = 1701860315,
-	l_hand_little_1 = 4154483602,
-	l_hand_little_2 = 1066433658,
-	l_hand_little_3 = 1693696853,
-	l_hand_middle_0 = 3110766098,
-	l_hand_middle_1 = 102203172,
-	l_hand_middle_2 = 314080914,
-	l_hand_ring_0 = 2720851449,
-	l_hand_ring_1 = 3296217527,
-	l_hand_ring_2 = 945525268,
-	l_hand_ring_3 = 3492964041,
-	l_hand_thumb_0 = 1630233276,
-	l_hand_thumb_1 = 2824751140,
-	l_hand_thumb_2 = 2695019754,
-	l_leg_ankle = 718421727,
-	l_leg_ball = 774556802,
-	l_leg_ballEnd = 2021516519,
-	l_leg_femur = 2896091387,
-	l_leg_tibia = 2433276823,
-	l_scapula_0 = 619320360,
-	l_trapA_muscle = 4069214965,
-	l_trapA_muscleOffset = 2719235399,
-	l_weapon = 1036978550,
-	neck_0 = 3537166074,
-	neck_1 = 10933021,
-	Null_Offset = 1573792880,
-	root = 2879905340,
-	r_arm_clavicle = 3221895761,
-	r_arm_humerus = 1725700276,
-	r_arm_radius = 50800011,
-	r_arm_wrist = 1941587442,
-	r_breast_00_chain_00 = 1331238703,
-	r_breast_00_chain_end = 4050787951,
-	r_collar_FK_0 = 464524947,
-	r_collar_FK_1 = 4003829791,
-	r_hand_index_0 = 3085756385,
-	r_hand_index_1 = 1547833604,
-	r_hand_index_2 = 1733166898,
-	r_hand_little_0 = 1015371196,
-	r_hand_little_1 = 3029243580,
-	r_hand_little_2 = 3276834551,
-	r_hand_little_3 = 506069809,
-	r_hand_middle_0 = 48313152,
-	r_hand_middle_1 = 4231601270,
-	r_hand_middle_2 = 1879303012,
-	r_hand_ring_0 = 657541931,
-	r_hand_ring_1 = 1695043796,
-	r_hand_ring_2 = 3805935542,
-	r_hand_ring_3 = 3330208587,
-	r_hand_thumb_0 = 678831033,
-	r_hand_thumb_1 = 2548756170,
-	r_hand_thumb_2 = 1982140252,
-	r_leg_ankle = 2497187219,
-	r_leg_ball = 2372646773,
-	r_leg_ballEnd = 3633439722,
-	r_leg_femur = 3912596401,
-	r_leg_tibia = 4086384926,
-	r_scapula_0 = 2149740517,
-	r_trapA_muscle = 1787884476,
-	r_trapA_muscleOffset = 3864158639,
-	r_weapon = 3434560371,
-	spine_0 = 830704514,
-	spine_1 = 2157395361,
-	spine_2 = 3007640129,,
-	Teeth = 1258987853,
-	Tongue_01 = 3111751173,
-	Tongue_02 = 4192679175,
-    //DMC5:
-    Hip = 1549972489,
-    Waist = 639293466,
-    Stomach = 1688180870,
-    Chest = 3471977595,
-    Neck = 1743374425,
-    Neck_Middle = 2209682408,
-    Head = 935285574,
-    R_Shoulder = 767461792,
-    R_BA_UpperArmRoot = 3096402156,
-    R_UpperArm = 2725057162,
-    R_Forearm = 608343916,
-    R_Hand = 315581468,
-    R_Palm = 113712880,
-    R_RingF1 = 2574338449,
-    R_RingF2 = 2947256747,
-    R_RingF3 = 2425714680,
-    R_PinkyF1 = 1637529764,
-    R_PinkyF2 = 2483505895,
-    R_PinkyF3 = 4031769476,
-    R_RingF1_rev_top = 20543758,
-    R_PinkyF1_rev_top = 2878548721,
-    R_MiddleF1 = 1579020745,
-    R_MiddleF2 = 960703452,
-    R_MiddleF3 = 4267995190,
-    R_IndexF1 = 1111761943,
-    R_IndexF2 = 2563018743,
-    R_IndexF3 = 4040736898,
-    R_Thumb1 = 3739009151,
-    R_Thumb2 = 3804363179,
-    R_Thumb3 = 3317698597,
-    R_WeaponHand = 3980784493,
-    R_IndexF1_rev_top = 1943275051,
-    R_MiddleF1_rev_top = 3656661298,
-    R_B_UpperArmRoot = 33138851,
-    R_Wing00Root = 4214963530,
-    L_Shoulder = 1913148385,
-    L_BA_UpperArmRoot = 2339832196,
-    L_UpperArm = 1345121450,
-    L_Forearm = 581854075,
-    L_Hand = 682134405,
-    L_Palm = 3323164822,
-    L_RingF1 = 190143090,
-    L_RingF2 = 3781027056,
-    L_RingF3 = 4192168769,
-    L_PinkyF1 = 3505060550,
-    L_PinkyF2 = 3433010367,
-    L_PinkyF3 = 4093523257,
-    L_RingF1_rev_top = 652663646,
-    L_PinkyF1_rev_top = 631793630,
-    L_MiddleF1 = 2746278887,
-    L_MiddleF2 = 3380624320,
-    L_MiddleF3 = 682508210,
-    L_IndexF1 = 2148146560,
-    L_IndexF2 = 2923866148,
-    L_IndexF3 = 2366532009,
-    L_Thumb1 = 1182223167,
-    L_Thumb2 = 4222396361,
-    L_Thumb3 = 4066935724,
-    L_WeaponHand = 3882907520,
-    L_IndexF1_rev_top = 3641230570,
-    L_MiddleF1_rev_top = 1016754300,
-    L_B_UpperArmRoot = 181733660,
-    L_Wing00Root = 1096447236,
-    WeaponConst = 766838008,
-    L_Thigh = 71627664,
-    L_Shin = 198352382,
-    L_Foot = 1292767429,
-    L_Foot_twist = 2128161134,
-    L_Toe = 2280731798,
-    R_Thigh = 2743772797,
-    R_Shin = 2925717275,
-    R_Foot = 549260636,
-    R_Foot_twist = 3108076359,
-    R_Toe = 829768755,
-    Head_Direction = 625417964,
+    ////Resident Evil:
+	//COG = 3425867754,
+	//head = 737706723,
+	//hips = 2795058024,
+	//holster_startleft_muscle = 2506568035,
+	//holster_startright_muscle = 1032406871,
+	//jointEyeLeft = 3198993277,
+	//jointEyeRight = 3098087795,
+	//l_arm_clavicle = 2971361680,,
+	//l_arm_humerus = 3722817809,
+	//l_arm_radius = 862024887,
+	//l_arm_wrist = 3949637493,
+	//l_breast_00_chain_00 = 2820484370,
+	//l_breast_00_chain_end = 3693603730,
+	//l_collar_FK_0 = 2486168545,
+	//l_collar_FK_1 = 2616227265,
+	//l_hand_index_0 = 3630789544,
+	//l_hand_index_1 = 2473287197,
+	//l_hand_index_2 = 4263029123,
+	//l_hand_little_0 = 1701860315,
+	//l_hand_little_1 = 4154483602,
+	//l_hand_little_2 = 1066433658,
+	//l_hand_little_3 = 1693696853,
+	//l_hand_middle_0 = 3110766098,
+	//l_hand_middle_1 = 102203172,
+	//l_hand_middle_2 = 314080914,
+	//l_hand_ring_0 = 2720851449,
+	//l_hand_ring_1 = 3296217527,
+	//l_hand_ring_2 = 945525268,
+	//l_hand_ring_3 = 3492964041,
+	//l_hand_thumb_0 = 1630233276,
+	//l_hand_thumb_1 = 2824751140,
+	//l_hand_thumb_2 = 2695019754,
+	//l_leg_ankle = 718421727,
+	//l_leg_ball = 774556802,
+	//l_leg_ballEnd = 2021516519,
+	//l_leg_femur = 2896091387,
+	//l_leg_tibia = 2433276823,
+	//l_scapula_0 = 619320360,
+	//l_trapA_muscle = 4069214965,
+	//l_trapA_muscleOffset = 2719235399,
+	//l_weapon = 1036978550,
+	//neck_0 = 3537166074,
+	//neck_1 = 10933021,
+	//Null_Offset = 1573792880,
+	//root = 2879905340,
+	//r_arm_clavicle = 3221895761,
+	//r_arm_humerus = 1725700276,
+	//r_arm_radius = 50800011,
+	//r_arm_wrist = 1941587442,
+	//r_breast_00_chain_00 = 1331238703,
+	//r_breast_00_chain_end = 4050787951,
+	//r_collar_FK_0 = 464524947,
+	//r_collar_FK_1 = 4003829791,
+	//r_hand_index_0 = 3085756385,
+	//r_hand_index_1 = 1547833604,
+	//r_hand_index_2 = 1733166898,
+	//r_hand_little_0 = 1015371196,
+	//r_hand_little_1 = 3029243580,
+	//r_hand_little_2 = 3276834551,
+	//r_hand_little_3 = 506069809,
+	//r_hand_middle_0 = 48313152,
+	//r_hand_middle_1 = 4231601270,
+	//r_hand_middle_2 = 1879303012,
+	//r_hand_ring_0 = 657541931,
+	//r_hand_ring_1 = 1695043796,
+	//r_hand_ring_2 = 3805935542,
+	//r_hand_ring_3 = 3330208587,
+	//r_hand_thumb_0 = 678831033,
+	//r_hand_thumb_1 = 2548756170,
+	//r_hand_thumb_2 = 1982140252,
+	//r_leg_ankle = 2497187219,
+	//r_leg_ball = 2372646773,
+	//r_leg_ballEnd = 3633439722,
+	//r_leg_femur = 3912596401,
+	//r_leg_tibia = 4086384926,
+	//r_scapula_0 = 2149740517,
+	//r_trapA_muscle = 1787884476,
+	//r_trapA_muscleOffset = 3864158639,
+	//r_weapon = 3434560371,
+	//spine_0 = 830704514,
+	//spine_1 = 2157395361,
+	//spine_2 = 3007640129,,
+	//Teeth = 1258987853,
+	//Tongue_01 = 3111751173,
+	//Tongue_02 = 4192679175,
+    ////DMC5:
+    //Hip = 1549972489,
+    //Waist = 639293466,
+    //Stomach = 1688180870,
+    //Chest = 3471977595,
+    //Neck = 1743374425,
+    //Neck_Middle = 2209682408,
+    //Head = 935285574,
+    //R_Shoulder = 767461792,
+    //R_BA_UpperArmRoot = 3096402156,
+    //R_UpperArm = 2725057162,
+    //R_Forearm = 608343916,
+    //R_Hand = 315581468,
+    //R_Palm = 113712880,
+    //R_RingF1 = 2574338449,
+    //R_RingF2 = 2947256747,
+    //R_RingF3 = 2425714680,
+    //R_PinkyF1 = 1637529764,
+    //R_PinkyF2 = 2483505895,
+    //R_PinkyF3 = 4031769476,
+    //R_RingF1_rev_top = 20543758,
+    //R_PinkyF1_rev_top = 2878548721,
+    //R_MiddleF1 = 1579020745,
+    //R_MiddleF2 = 960703452,
+    //R_MiddleF3 = 4267995190,
+    //R_IndexF1 = 1111761943,
+    //R_IndexF2 = 2563018743,
+    //R_IndexF3 = 4040736898,
+    //R_Thumb1 = 3739009151,
+    //R_Thumb2 = 3804363179,
+    //R_Thumb3 = 3317698597,
+    //R_WeaponHand = 3980784493,
+    //R_IndexF1_rev_top = 1943275051,
+    //R_MiddleF1_rev_top = 3656661298,
+    //R_B_UpperArmRoot = 33138851,
+    //R_Wing00Root = 4214963530,
+    //L_Shoulder = 1913148385,
+    //L_BA_UpperArmRoot = 2339832196,
+    //L_UpperArm = 1345121450,
+    //L_Forearm = 581854075,
+    //L_Hand = 682134405,
+    //L_Palm = 3323164822,
+    //L_RingF1 = 190143090,
+    //L_RingF2 = 3781027056,
+    //L_RingF3 = 4192168769,
+    //L_PinkyF1 = 3505060550,
+    //L_PinkyF2 = 3433010367,
+    //L_PinkyF3 = 4093523257,
+    //L_RingF1_rev_top = 652663646,
+    //L_PinkyF1_rev_top = 631793630,
+    //L_MiddleF1 = 2746278887,
+    //L_MiddleF2 = 3380624320,
+    //L_MiddleF3 = 682508210,
+    //L_IndexF1 = 2148146560,
+    //L_IndexF2 = 2923866148,
+    //L_IndexF3 = 2366532009,
+    //L_Thumb1 = 1182223167,
+    //L_Thumb2 = 4222396361,
+    //L_Thumb3 = 4066935724,
+    //L_WeaponHand = 3882907520,
+    //L_IndexF1_rev_top = 3641230570,
+    //L_MiddleF1_rev_top = 1016754300,
+    //L_B_UpperArmRoot = 181733660,
+    //L_Wing00Root = 1096447236,
+    //WeaponConst = 766838008,
+    //L_Thigh = 71627664,
+    //L_Shin = 198352382,
+    //L_Foot = 1292767429,
+    //L_Foot_twist = 2128161134,
+    //L_Toe = 2280731798,
+    //R_Thigh = 2743772797,
+    //R_Shin = 2925717275,
+    //R_Foot = 549260636,
+    //R_Foot_twist = 3108076359,
+    //R_Toe = 829768755,
+    //Head_Direction = 625417964,
     //MHRise:
     Root = 4175418299,
     Cog = 3903073785,
@@ -558,7 +558,8 @@ typedef struct {
     uint64 offset;
     if (offset) {
         FSeek(offset);
-        wstring name;
+        wstring name <bgcolor=0x8d56ff>;
+        //wchar_t name[16] <bgcolor=0x8d56ff>;
         FSeek(startof(offset)+8);
         local uint Expected_Hash = hash_wide((string)name);
     } else 
@@ -709,9 +710,9 @@ uint32 hash_wide(string key){
 
 //================================================== start
 
-SetForeColor(cLtGreen);
+//SetForeColor(cLtGreen);
 struct ChainData {
-    uint version;
+    uint version ;
     uint magic;
     enum {
         ErrFlags_None = 0x0,
@@ -721,16 +722,16 @@ struct ChainData {
     } ErrFlags;
     uint masterSize;
     StringOffset collisionAttrAsset;
-    uint64 modelCollisionTbl;
+    uint64 modelCollisionTbl <bgcolor=0x000000, fgcolor=0xffffff> /*-------- COLOR --------*/ ;
     StringOffset extraData;
-    uint64 groupTbl;
-    uint64 linkTbl;
-    uint64 settingTbl;
-    uint64 windSettingTbl;
-    char groupCount;
-    char settingCount;
-    char modelCollisionCount;
-    char windSettingCount;
+    uint64 groupTbl <bgcolor=0x000000, fgcolor=0xffffff> /*-------- COLOR --------*/ ;
+    uint64 linkTbl <bgcolor=0x000000, fgcolor=0xffffff> /*-------- COLOR --------*/ ;
+    uint64 settingTbl <bgcolor=0x000000, fgcolor=0xffffff> /*-------- COLOR --------*/ ;
+    uint64 windSettingTbl <bgcolor=0x000000, fgcolor=0xffffff> /*-------- COLOR --------*/ ;
+    char groupCount <bgcolor=0x001ac9> /*-------- COLOR --------*/ ;
+    char settingCount <bgcolor=0x229933> /*-------- COLOR --------*/ ;
+    char modelCollisionCount <bgcolor=0x006bc9> /*-------- COLOR --------*/ ;
+    char windSettingCount <bgcolor=0x00dddd> /*-------- COLOR --------*/ ;
     char linkCount;
     RotationOrder execOrderMax;
     char defaultSettingIdx;
@@ -766,20 +767,19 @@ struct ChainData {
             HitFlags_VGround = 0x40,
             HitFlags_Collision = 0x6E,
         } collisionFilterHit[8];
-} Header;
+    byte unknBytes[8];
+} Header <bgcolor=0x93671a> /*-------------------------------- COLOR --------------------------------*/ ;
 
-typedef struct {
+struct ChainSetting {
     local int index <hidden=true> = i;
     FSeek(Header.groupTbl);
     for(j = 0; j < Header.groupCount; j++)
         if (ReadUInt(Header.groupTbl + j * chainGrpSz + 16) == index) {
             struct {
-                local uint jointCount <hidden=true>;
                 for(j = 0; j < Header.groupCount; j++)
                     if (ReadUInt(Header.groupTbl + j * chainGrpSz + 16) == index) {
                         FSeek(Header.groupTbl + j * chainGrpSz);
                         StringOffset Joint;
-                        jointCount++;
                     }
             } Joints;
             break;
@@ -793,7 +793,7 @@ typedef struct {
         float curve1;
         float curve2;
     } SprayParameter;
-    uint id;
+    uint id <bgcolor=0xaaff00, fgcolor=0xffffff> /*-------- COLOR --------*/;
     enum <byte> {
         ChainType_Chain = 0x0,
         ChainType_Shooter = 0x1,
@@ -810,35 +810,51 @@ typedef struct {
         DirectionOfEmission_Global = 0x0,
         DirectionOfEmission_Local = 0x1,
         DirectionOfEmission_GroupLocal = 0x2,
-    } muzzleDirection;
-    char windId;
-    Float3 gravity;
-    Float3 muzzleVelocity;
-    float damping;
-    float secondDamping;
-    float secondDampingSpeed;
-    if (version >= 24) {
-        float minDamping;
-        float secondMinDamping;
-        float dampingPow;
-        float secondDampingPow;
-        float collideMaxVelocity;
-    }
-    float springForce;
-    if (version >= 24) {
-        float springLimitRate;
-        float springMaxVelocity;
-        enum <byte> {
-            ChainSpringCalcType_Position = 0x0,
-            ChainSpringCalcType_Rotation = 0x1,
-        } springCalcType;
-        char padding0 <hidden=true>;
-        char padding1 <hidden=true>;
-        char padding2 <hidden=true>;
-    }
-    float reduceSelfDistanceRate;
-    float secondReduceDistanceRate;
-    float secondReduceDistanceSpeed;
+    } muzzleDirection <bgcolor=0x00dd00> /*-------- COLOR --------*/;
+    char windId <bgcolor=0x00cecb> /*-------- COLOR --------*/;
+    //Float3 gravity <bgcolor=0x560000>;
+    struct {    
+        float gravX <name="X Axis", bgcolor=0x5656ff> /*-------- COLOR --------*/ ;
+        float gravY <name="Y Axis", bgcolor=0x56ff56> /*-------- COLOR --------*/ ; 
+        float gravZ <name="Z Axis", bgcolor=0xff5656> /*-------- COLOR --------*/ ;
+    } gravity;
+    //Float3 muzzleVelocity;
+    struct {  
+        float muzzleVelocityX <name="X Axis", bgcolor=0x5656ff> /*-------- COLOR --------*/ ;
+        float muzzleVelocityY <name="Y Axis", bgcolor=0x56ff56> /*-------- COLOR --------*/ ; 
+        float muzzleVelocityZ <name="Z Axis", bgcolor=0xff5656> /*-------- COLOR --------*/ ; 
+    } muzzleVelocity;
+    struct dampingCS{
+        float damping;
+        float secondDamping;
+        float secondDampingSpeed;
+        if (version >= 24) {
+            float minDamping;
+            float secondMinDamping;
+            float dampingPow;
+            float secondDampingPow;
+            float collideMaxVelocity;
+        }
+    } CSdamping <name="struct damping">;
+    struct springCS {
+        float springForce;
+        if (version >= 24) {
+            float springLimitRate;
+            float springMaxVelocity;
+            enum <byte> {
+                ChainSpringCalcType_Position = 0x0,
+                ChainSpringCalcType_Rotation = 0x1,
+            } springCalcType;
+            char padding0 <hidden=true>;
+            char padding1 <hidden=true>;
+            char padding2 <hidden=true>;
+        }
+    } CSspring <name="struct spring">;
+    struct reduceRateCS {
+        float reduceSelfDistanceRate;
+        float secondReduceDistanceRate;
+        float secondReduceDistanceSpeed;
+    } CSreduce <name="struct reduceRate">;
     float friction;
     float shockAbsorptionRate;
     float coefOfElasticity;
@@ -847,26 +863,19 @@ typedef struct {
     float angleLimitInteractionRatio;
     float shootingElasticLimitRate;
     AttrFlags groupDefaultAttr;
-    float windEffectCoef;
+    float windEffectCoef <bgcolor=0x00dddd> /*-------- COLOR --------*/ ;
     float velocityLimit;
     float hardness;
     if (version >= 46) {
-        float ukn0;
-        float ukn1;
+        float ukn0 <bgcolor=0x4d994c> /*-------- COLOR --------*/ ;
+        float ukn1 <bgcolor=0x4d994c> /*-------- COLOR --------*/ ;
     }
     /*if (version >= 48) {
         float ukn2;
         float ukn3;
     }*/
-} ChainSetting <read=ReadChainSetting>;
 
-    string ReadChainSetting(ChainSetting &c) {
-        local string s;
-        if (exists(c.Joints))
-            for (i=0; i<c.Joints.jointCount; i++)
-                s = s + ReadOffset(c.Joints.Joint[i]) + ", ";
-        return s;
-    }
+};
 
 if (Header.settingTbl) {
     FSeek(Header.settingTbl);
@@ -875,7 +884,8 @@ if (Header.settingTbl) {
             FSeek(Header.settingTbl + settingSz * i);
             ChainSetting Setting;
         }
-    } ChainSettings;
+    //float unknFloats[4] <name="Unknown Floats", bgcolor=0x222222, fgcolor=0x666666>;
+    } ChainSettings <bgcolor=0x263f2a> /*-------------------------------- COLOR --------------------------------*/ ;
 }
 
 FSeek(Header.modelCollisionTbl);
@@ -883,18 +893,33 @@ if (Header.modelCollisionTbl && Header.modelCollisionCount)
     struct {
         struct ChainCollisionData {
             uint64 subDataTbl;
-            Float3 pos;
-            Float3 pairPos;
+            //Float3 pos;
+        struct {    
+                float cposX <name="X Axis", bgcolor=0x5656ff> /*-------- COLOR --------*/ ;
+                float cposY <name="Y Axis", bgcolor=0x56ff56> /*-------- COLOR --------*/ ; 
+                float cposZ <name="Z Axis", bgcolor=0xff5656> /*-------- COLOR --------*/ ;
+        } Position;
+            //Float3 pairPos;
+        struct {    
+                float cPairPosX <name="X Axis", bgcolor=0x5656ff> /*-------- COLOR --------*/ ;
+                float cPairPosY <name="Y Axis", bgcolor=0x56ff56> /*-------- COLOR --------*/ ; 
+                float cPairPosZ <name="Z Axis", bgcolor=0xff5656> /*-------- COLOR --------*/ ;
+        } pairPosition;
             if (version == 48 || version == 46 || version == 39 || version == 35) {
                 Float4 rotOffset;
                 if (version == 48 || version == 46 || version == 39) {
                     RotationOrder order;
-                    FSkip(3);
+                    //FSkip(3);
                 }
             }
-            BoneHashes jointNameHash;
-            BoneHashes pairJointNameHash;
-            float radius;
+        struct {
+            byte unkn1;
+            byte unkn2;
+            byte unkn3;
+        } unknownBytes <hidden=true>;
+            BoneHashes jointNameHash <bgcolor=0xaaaaaa> /*-------- COLOR --------*/;
+            BoneHashes pairJointNameHash <bgcolor=0xaaaaaa> /*-------- COLOR --------*/;
+            float radius <bgcolor=0x0088dd> /*-------- COLOR --------*/;
             float lerp;
             if (version >= 48)
                 float ukn;
@@ -926,8 +951,8 @@ if (Header.modelCollisionTbl && Header.modelCollisionCount)
             }
             FSeek(startof(this)+colSz);
         } Collision[Header.modelCollisionCount] <optimize=false, read=ReadChainCollisionData>;
-    } Collisions;
-    
+    } Collisions <bgcolor=0x004075> /*-------------------------------- COLOR --------------------------------*/ ;
+
     string ReadChainCollisionData(ChainCollisionData &c) { 
         local string str = EnumToString(c.jointNameHash); 
         if (c.pairJointNameHash)
@@ -942,13 +967,13 @@ struct ChainNodeData {
     float angleLimitDistance;
     float angleLimitRestitution;
     float angleLimitRestituteStopSpeed;
-    float collisionRadius;
+    float collisionRadius <bgcolor=0x6644ff> /*-------- COLOR --------*/;
     CollisionFilterFlags collisionFilterFlags;
     float capsuleStretchRate;
     float capsuleStretchRate;
     AttrFlags attributeFlag;
     BoneHashes constraintJntNameHash;
-    float windCoef;
+    float windCoef <bgcolor=0x00dddd> /*-------- COLOR --------*/ ;
     enum <ubyte> {
         AngleMode_Free = 0x0,
         AngleMode_LimitCone = 0x1,
@@ -956,13 +981,13 @@ struct ChainNodeData {
         AngleMode_LimitConeBox = 0x3,
         AngleMode_LimitOval = 0x4,
         AngleMode_LimitElliptic = 0x5,
-    } angleMode;
+    } angleMode <bgcolor=0x6666ff> /*-------- COLOR --------*/;
     enum <byte> {
         ChainNodeCollisionShape_None = 0x0,
         ChainNodeCollisionShape_Sphere = 0x1,
         ChainNodeCollisionShape_Capsule = 0x2,
         ChainNodeCollisionShape_StretchCapsule = 0x3,
-    } collisionShape;
+    } collisionShape <bgcolor=0x66aaff> /*-------- COLOR --------*/;
     char attachType;
     char rotationType;
     if (version == 46 || version == 39 || version == 35) {
@@ -988,7 +1013,7 @@ struct ChainNodeData {
             } ChainJiggle;
         }
     }
-    float ukn[4];
+    float ukn[4] <bgcolor=0x8d56a5> /*-------------------------------- COLOR --------------------------------*/ ;
     FSeek(startof(this)+nodeSz);
 };
 
@@ -1020,39 +1045,39 @@ string ReadChainNodeData(ChainNodeData &c) {
 }
 
 struct ChainGroupData {
-    StringOffset terminalNodeName <write=WriteBoneName>;
-    uint64 nodeTbl;
-    uint settingID;
-    char nodeCount;
-    RotationOrder execOrder; 
-    char autoBlendCheckNodeNo;
-    char windID;
-    BoneHashes terminalNameHash;
-    AttrFlags attrFlags;
-    CollisionFilterFlags collisionFilterFlags;
-    Float3 extraNodeLocalPos;
+    StringOffset terminalNodeName <write=WriteBoneName, bgcolor=0x000000, fgcolor=0xffffff> /*-------- COLOR --------*/;
+    uint64 nodeTbl <bgcolor=0x000000, fgcolor=0xffffff> /*-------- COLOR --------*/ ;
+    uint settingID <bgcolor=0x229933> /*-------- COLOR --------*/;
+    char nodeCount <bgcolor=0x0000ff> /*-------- COLOR --------*/;
+    RotationOrder execOrder <bgcolor=0x001175> /*-------- COLOR --------*/; 
+    char autoBlendCheckNodeNo <bgcolor=0x001175> /*-------- COLOR --------*/;
+    char windID <bgcolor=0x00dddd> /*-------- COLOR --------*/;
+    BoneHashes terminalNameHash <bgcolor=0xaaaaaa> /*-------- COLOR --------*/;
+    AttrFlags attrFlags <bgcolor=0x001175> /*-------- COLOR --------*/;
+    CollisionFilterFlags collisionFilterFlags <bgcolor=0x001175> /*-------- COLOR --------*/;
+    Float3 extraNodeLocalPos <bgcolor=0x001175> /*-------- COLOR --------*/;
     if (version == 46 || version == 48 || version == 39 || version == 35) {
-        uint tags[4];
-        float dampingNoise, dampingNoise;
-        float endRotConstMax;
-        char tagCount;
+        uint tags[4] <bgcolor=0x001175> /*-------- COLOR --------*/;
+        float dampingNoise <bgcolor=0x001175> /*-------- COLOR --------*/, dampingNoise <bgcolor=0x001175> /*-------- COLOR --------*/;
+        float endRotConstMax <bgcolor=0x001175> /*-------- COLOR --------*/;
+        char tagCount <bgcolor=0x001175> /*-------- COLOR --------*/;
         enum <byte> AngleLimitDirectionMode {
             AngleLimitDirectionMode_BasePose = 0x0,
             AngleLimitDirectionMode_MotionPose = 0x1,
-        } angleLimitDirectionMode;
-        uint16 padding0 <hidden=true>;
+        } angleLimitDirectionMode <bgcolor=0x001175> /*-------- COLOR --------*/;
+        uint16 padding0 <hidden=true, bgcolor=0x001175> /*-------- COLOR --------*/;
     }
     if (Version == 48)
-        uint64 uknI64_00;
+        uint64 uknI64_00 <bgcolor=0x001175> /*-------- COLOR --------*/;
     if (version == 5) {
         float ukn;
-        Float3 ukn2;
+        Float3 ukn2 <bgcolor=0x001175> /*-------- COLOR --------*/;
     }
     
     if (Version == 48) {
-        BoneHashes unknownBoneHash;
-        uint32 unknown;
-        uint64 unknownI64;
+        BoneHashes unknownBoneHash <bgcolor=0xaaaaaa> /*-------- COLOR --------*/;
+        uint32 unknown <bgcolor=0x001175> /*-------- COLOR --------*/;
+        uint64 unknownI64 <bgcolor=0x001175> /*-------- COLOR --------*/;
         /*if (nextNodeOffs+nodeSz <= FileSize()) {
             FSeek(nextNodeOffs);
             ChainNodeData nextNode;
@@ -1060,14 +1085,14 @@ struct ChainGroupData {
     }
     if (version == 46 || Version == 48){
         //uint64 subChainsOffs;
-        StringOffset nextChainName;
+        StringOffset nextChainName <bgcolor=0x000000, fgcolor=0xffffff> /*-------- COLOR --------*/ ;
     }
 
     if (nodeTbl > 0) {
         FSeek(nodeTbl);
         nodeTotal += nodeCount;
         for (i=0; i<nodeCount; i++)
-            ChainNodeData Node <read=ReadChainNodeData>;
+            ChainNodeData Node <read=ReadChainNodeData, bgcolor=0x4a2d56> /*-------------------------------- COLOR --------------------------------*/;
     }
     
     /*if (version == 46) {
@@ -1099,13 +1124,13 @@ FSeek(Header.groupTbl);
 if (Header.groupTbl && Header.groupCount)
     struct {
         ChainGroupData ChainGroup[Header.groupCount] <read=ReadChainGroup, optimize=false>;
-    } ChainGroups;
+    } ChainGroups; //<bgcolor=0x001175> /*-------------------------------- COLOR --------------------------------*/;
 
 string ReadChainGroup(ChainGroupData &c) { return c.terminalNodeName.name; }
 
 struct WindSetting {
     if (version != 5) {
-        uint id;
+        uint id <bgcolor=0x55ffff, fgcolor=0xffffff> /*-------- COLOR --------*/ ;
         for(j = 0; j < Header.settingCount; j++) {
             if (ReadUByte(Header.settingTbl + j * settingSz + 31) == id) {
                 FSeek(Header.settingTbl + j * settingSz);
@@ -1131,28 +1156,33 @@ struct WindSetting {
         enum <byte> {
             WindDirection_Global = 0x0,
             WindDirection_Local = 0x1,
-        } windDirection;
-        char windCount;
+        } windDirection <bgcolor=0x00aaff> /*-------- COLOR --------*/ ;
+        char windCount <bgcolor=0x0e8278> /*-------- COLOR --------*/ ;
         enum <byte> {
             WindType_None = 0x0,
             WindType_WindOrSpring = 0x1,
             WindType_GravityWave = 0x2,
             WindType_WindWave = 0x3,
-        } WindType;
-        char empty <hidden=true>;
-        float randomDamping;
-        float randomDampingCycle;
-        float randomCycleScaling;
-        uint reserved <hidden=true>;
-        struct {
-            Float3 direction[5] <optimize=false, open=true>;
-            blank();
-        } directions;
-        Float5 min;
-        Float5 max;
-        Float5 phaseShift;
-        Float5 cycle;
-        Float5 interval;
+        } WindType <bgcolor=0x0e8278> /*-------- COLOR --------*/ ;
+        char empty <hidden=true, bgcolor=0x0e8278> /*-------- COLOR --------*/ ;
+        float randomDamping <bgcolor=0x0e8278> /*-------- COLOR --------*/ ;
+        float randomDampingCycle <bgcolor=0x0e8278> /*-------- COLOR --------*/ ;
+        float randomCycleScaling <bgcolor=0x0e8278> /*-------- COLOR --------*/ ;
+        uint reserved <hidden=true, bgcolor=0x0e8278> /*-------- COLOR --------*/ ;
+        //struct {
+        //    Float3 direction[5] <optimize=false, open=true>;
+        //    blank();
+        //} directions <bgcolor=0x0e8278> /*-------- COLOR --------*/ ;
+        struct {    
+                float windX <name="X Axis", bgcolor=0x5656ff> /*-------- COLOR --------*/ ;
+                float windY <name="Y Axis", bgcolor=0x56ff56> /*-------- COLOR --------*/ ; 
+                float windZ <name="Z Axis", bgcolor=0xff5656> /*-------- COLOR --------*/ ;
+        } windDirections[5] <open=true>;
+        Float5 min <bgcolor=0x00ddaa> /*-------- COLOR --------*/ ;
+        Float5 max <bgcolor=0x00ddaa> /*-------- COLOR --------*/ ;
+        Float5 phaseShift <bgcolor=0x0e8278> /*-------- COLOR --------*/ ;
+        Float5 cycle <bgcolor=0x00ddaa> /*-------- COLOR --------*/ ;
+        Float5 interval <bgcolor=0x0e8278> /*-------- COLOR --------*/ ;
     } else {
         for(i = 0; i < Header.windSettingCount; i++){
             struct{
@@ -1179,7 +1209,7 @@ if (Header.windSettingTbl && Header.windSettingCount)
     else 
         struct {
             WindSetting Wind[Header.windSettingCount] <optimize=false>;
-        } Wind;
+        } Wind ;
 
 struct ChainLinkData {
     uint64 nodeTbl;
@@ -1201,8 +1231,8 @@ struct ChainLinkData {
         AttrFlags_EnableStretch = 0x1,
     } linkAttrFlags;
     char nodeTblCount;
-    char skipGroupA;
-    char skipGroupB;
+    BOOL skipGroupA;
+    BOOL skipGroupB;
     RotationOrder linkOrder;
     if (nodeTbl && nodeTblCount && (nodeTbl + (nodeTblCount * 8) <= FileSize())) {
         FSeek(nodeTbl);
