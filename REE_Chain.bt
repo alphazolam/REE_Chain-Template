@@ -887,7 +887,7 @@ if (Header.modelCollisionTbl && Header.modelCollisionCount)
             Float3 pairPos;
             if (version == 48 || version == 46 || version == 39 || version == 35) {
                 Float4 rotOffset;
-                if (version == 48 || version == 46 || version == 39) {
+                if (version != 35) {
                     RotationOrder order;
                     FSkip(3);
                 }
@@ -987,8 +987,8 @@ struct ChainNodeData {
                 unsigned int padding <hidden=true>;
             } ChainJiggle;
         }
+        float ukn[4];
     }
-    float ukn[4];
     FSeek(startof(this)+nodeSz);
 };
 
