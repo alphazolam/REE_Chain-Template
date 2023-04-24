@@ -3,12 +3,12 @@
 //
 //      File: REE_Chain.bt
 //   Authors: alphaZomega
-//   Version: 1.43
+//   Version: 1.46
 //   Purpose: RE Engine Chain file editing
 //  Category: RE Engine
 // File Mask: *.chain.*
 //  ID Bytes: [+4]63 68 61 6E
-//   History: July 2, 2022
+//   History: April 5, 2023
 //------------------------------------------------
 LittleEndian();
 
@@ -24,12 +24,17 @@ local uint version <hidden=false> = Version; //the internal chain version for mo
 
 FSeek(0);
 
+if (version >= 52) {
+    settingSz = 176;
+    chainGrpSz = 120;
+}
+
 if (version == 48) {
     settingSz = 168;
     chainGrpSz = 112;
 }
 
-if (version == 46) {
+if (version == 46 || version == 44) {
     settingSz = 168;
     chainGrpSz = 88;
 }
@@ -54,7 +59,145 @@ if (version == 5) {
     nodeSz = 48;
 }
 
+//supports versions 21 - 39:
 void WriteVersion(uint32 &v, string s) {
+    int ver = Atoi(s);
+    int settingsDiff;
+    int colDiff;
+    int chainGrpDiff;
+    int nodeDiff;
+    int multiplier = 1;
+    if (version == 21) {
+        if (ver == 24 || ver == 39 || ver == 35) 
+            settingsDiff = 32 * Header.settingCount;
+        if (ver == 39 || ver == 35) {
+            colDiff = (24 + (-8 * (ver == 35))) * Header.modelCollisionCount;
+            chainGrpDiff = 32 * Header.groupCount;
+            nodeDiff = 16 * nodeTotal;
+        }
+    }
+    
+    if (version == 24) {
+        if (ver == 21) {
+            settingsDiff = -32 * Header.settingCount;
+            multiplier = -1;
+        }
+        if (ver == 39 || ver == 35) {
+            colDiff = (24 + (-8 * (ver == 35))) * Header.modelCollisionCount;
+            chainGrpDiff = 32 * Header.groupCount;
+            nodeDiff = 16 * nodeTotal;
+        }
+    }
+      
+    if (version == 39 || version == 35) {
+        multiplier = -1;
+        if (ver == 21) 
+            settingsDiff = -32 * Header.settingCount;
+        if (ver == 21 || ver == 24) {
+            colDiff = (-24 + (8 * (version == 35))) * Header.modelCollisionCount;
+            chainGrpDiff = -32 * Header.groupCount;
+            nodeDiff = -16 * nodeTotal;
+        }
+    }
+    if ((version == 35 && ver == 39) || (version == 39 && ver == 35))
+        v = Atoi(s);
+    else if (Abs(settingsDiff + colDiff + chainGrpDiff + nodeDiff)) 
+    {
+        int paddingBytes = ((Header.groupTbl + settingsDiff + colDiff) % 16) * -multiplier;
+        colDiff += paddingBytes;
+        
+        if (Header.modelCollisionTbl)
+            Header.modelCollisionTbl += settingsDiff;
+        if (Header.groupTbl)
+            Header.groupTbl += settingsDiff + colDiff;
+        if (Header.linkTbl)
+            Header.linkTbl += settingsDiff + colDiff + chainGrpDiff + nodeDiff;
+        if (Header.windSettingTbl)
+            Header.windSettingTbl += settingsDiff + colDiff + chainGrpDiff + nodeDiff;
+
+        for (i=0; i<Header.linkCount; i++)
+            if (ChainLinks.ChainLink[i].nodeTbl)
+                ChainLinks.ChainLink[i].nodeTbl += settingsDiff + colDiff + chainGrpDiff + nodeDiff;
+        
+        int tempDiff;
+        for (i=0; i<Header.groupCount; i++) {
+            if (ChainGroups.ChainGroup[i].nodeTbl) 
+                ChainGroups.ChainGroup[i].nodeTbl += settingsDiff + colDiff + chainGrpDiff + tempDiff;
+            ChainGroups.ChainGroup[i].terminalNodeName.offset += settingsDiff + colDiff + chainGrpDiff + tempDiff;
+            if (colDiff + chainGrpDiff + nodeDiff)
+                tempDiff += ChainGroups.ChainGroup[i].nodeCount * 16 * multiplier;
+        }
+        
+        for (i=0; i<Header.modelCollisionCount; i++) {
+            if (Collisions.Collision[i].subDataTbl)
+                Collisions.Collision[i].subDataTbl += settingsDiff + colDiff;
+        }
+
+        tempDiff = 0;
+        for (i=0; i<Header.settingCount; i++) 
+            if (ChainSettings.Setting[i].colliderFilterInfoPath.offset)
+               ChainSettings.Setting[i].colliderFilterInfoPath.offset += settingsDiff;
+        
+        if (nodeDiff > 0) {
+            for (i=Header.groupCount-1; i>=0; i--)
+                for (j=ChainGroups.ChainGroup[i].nodeCount-1; j>=0; j--) 
+                    InsertBytes(startof(ChainGroups.ChainGroup[i].Node[j])+64, 16, 0);
+            for (i=Header.groupCount-1; i>=0; i--) {
+                InsertBytes(startof(ChainGroups.ChainGroup[i])+48, 32, 0);
+                WriteFloat(startof(ChainGroups.ChainGroup[i])+72, 12.56637);
+            }
+            if (paddingBytes) 
+                DeleteBytes(startof(ChainGroups.ChainGroup[0])-8, Abs(paddingBytes));         
+        }
+        
+        if (nodeDiff < 0) {
+            for (i=Header.groupCount-1; i>=0; i--)
+                for (j=ChainGroups.ChainGroup[i].nodeCount-1; j>=0; j--) 
+                    DeleteBytes(startof(ChainGroups.ChainGroup[i].Node[j])+64, 16);
+            for (i=Header.groupCount-1; i>=0; i--) 
+                DeleteBytes(startof(ChainGroups.ChainGroup[i])+48, 32);
+            if (paddingBytes) 
+                InsertBytes(startof(ChainGroups.ChainGroup[0]), Abs(paddingBytes), 0);   
+        }
+
+        if (colDiff > 0) 
+            for (i=Header.modelCollisionCount-1; i>=0; i--) {
+                if (ver != 35)
+                    InsertBytes(startof(Collisions.Collision[i])+56, 4, 0);
+                InsertBytes(startof(Collisions.Collision[i])+32, 20 + (-4 * (ver == 35)), 0);
+            }
+
+        if (colDiff < 0)
+            for (i=Header.modelCollisionCount-1; i>=0; i--) {
+                if (version != 35)
+                    DeleteBytes(startof(Collisions.Collision[i])+76, 4);
+                DeleteBytes(startof(Collisions.Collision[i])+32, 20 + (-4 * (version == 35)));
+            }
+
+        if (settingsDiff < 0) 
+            for (i=Header.settingCount-1; i>=0; i--) {
+                DeleteBytes(startof(ChainSettings.Setting[i].springLimitRate), 12);
+                DeleteBytes(startof(ChainSettings.Setting[i].minDamping), 20);
+            }
+        
+        if (settingsDiff > 0)
+            for (i=Header.settingCount-1; i>=0; i--) {
+                InsertBytes(startof(ChainSettings.Setting[i].reduceSelfDistanceRate), 12, 0);
+                InsertBytes(startof(ChainSettings.Setting[i].springForce), 20, 0);
+                WriteFloat(startof(ChainSettings.Setting[i].secondDampingSpeed)+4, ChainSettings.Setting[i].damping );
+                WriteFloat(startof(ChainSettings.Setting[i].secondDampingSpeed)+8, ChainSettings.Setting[i].secondDamping);
+                WriteFloat(startof(ChainSettings.Setting[i].secondDampingSpeed)+12, 1);
+                WriteFloat(startof(ChainSettings.Setting[i].secondDampingSpeed)+16, 1);
+            }
+        
+        v = Atoi(s);
+        MessageBox( idOk, "Chain Conversion", "Press F5 to Refresh the template and fix template results");
+    }
+    Printf("%i\n", colDiff / Header.modelCollisionCount);
+}
+
+//WIP new version, do not use
+void WriteVersion2(uint32 &v, string s) {
     version = Version;
     int newVer = Atoi(s);
     int settingsDiff, singleSettingsDiff;
@@ -219,7 +362,7 @@ void WriteVersion(uint32 &v, string s) {
     //Printf("%i\n", colDiff / Header.modelCollisionCount);
 }
 
-enum <uint32> BoneHashes {
+typedef enum <uint32> {
     //Resident Evil:
 	COG = 3425867754,
 	head = 737706723,
@@ -462,7 +605,27 @@ enum <uint32> BoneHashes {
     Face_Parts = 2416820057,
     LookAt = 701895665,
     PL_Cam = 3426171872,
-};
+    //RE4R
+    L_ToeEnd = 110254640,
+    R_ToeEnd = 1314728543,
+    Spine_0 = 3992101857,
+    Spine_1 = 1091167843,
+    Spine_2 = 1951860438,
+    L_Wep = 1518327321,
+    R_Wep = 1138773017,
+    Neck_0 = 3276980779,
+    Neck_1 = 3946539076,
+
+} BoneHashes <write=WriteBoneHashes>;
+
+void WriteBoneHashes(BoneHashes &b, string s) {
+    s = SubStr(s, 0, doesExist(s, " "));
+    if (Atof(s) == 0) {
+        b = hash_wide(s);
+    } else {
+        b = Atof(s);
+    }
+}
 
 enum <int32> AttrFlags {
     AttrFlags_None = 0x0,
@@ -725,6 +888,8 @@ struct ChainData {
     StringOffset extraData;
     uint64 groupTbl;
     uint64 linkTbl;
+    if (version >= 53)
+        uint64 uknTbl;
     uint64 settingTbl;
     uint64 windSettingTbl;
     char groupCount;
@@ -769,7 +934,7 @@ struct ChainData {
 } Header;
 
 typedef struct {
-    local int index <hidden=true> = i;
+    local int index <hidden=true> = ReadUInt(FTell()+24);//i;
     FSeek(Header.groupTbl);
     for(j = 0; j < Header.groupCount; j++)
         if (ReadUInt(Header.groupTbl + j * chainGrpSz + 16) == index) {
@@ -853,6 +1018,10 @@ typedef struct {
     if (version >= 46) {
         float ukn0;
         float ukn1;
+        if (version >= 52) {
+            float ukn3;
+            float ukn4;
+        }
     }
     /*if (version >= 48) {
         float ukn2;
@@ -885,7 +1054,7 @@ if (Header.modelCollisionTbl && Header.modelCollisionCount)
             uint64 subDataTbl;
             Float3 pos;
             Float3 pairPos;
-            if (version == 48 || version == 46 || version == 39 || version == 35) {
+            if (version >= 35) {
                 Float4 rotOffset;
                 if (version != 35) {
                     RotationOrder order;
@@ -917,8 +1086,10 @@ if (Header.modelCollisionTbl && Header.modelCollisionCount)
                     ChainCollisionType_Collider = 0x2,
                     ChainCollisionType_VGround = 0x3,
                 } collisionFilterFlags;
-                if (version == 48 || version == 46 || version == 39 || version == 35)
-                    uint padding0 <hidden=true>;
+                if (version == 39 || version == 46 || version == 44) 
+                    int ukn;
+                //if (version == 39 || version == 46)
+                //    uint padding0 <hidden=0>;
                 if (subDataTbl) {
                     FSeek(subDataTbl);
                     struct ChainSubCollisionData ChainSubCollision[subDataCount] <optimize=false>;
@@ -929,9 +1100,10 @@ if (Header.modelCollisionTbl && Header.modelCollisionCount)
     } Collisions;
     
     string ReadChainCollisionData(ChainCollisionData &c) { 
-        local string str = EnumToString(c.jointNameHash); 
+        local string str = EnumToString(c.jointNameHash); if (str=="") str = "???"; 
+        local string str2 = EnumToString(c.pairJointNameHash); if (str2=="") str2 = "???";
         if (c.pairJointNameHash)
-            return str + " <--> " + EnumToString(c.pairJointNameHash); 
+            return str + " <--> " + str2; 
         return str;
     }
 
@@ -965,9 +1137,10 @@ struct ChainNodeData {
     } collisionShape;
     char attachType;
     char rotationType;
-    if (version == 46 || version == 39 || version == 35) {
+    if (version >= 35) {
         uint64 jiggleData;
-        uint64 padding <hidden=true>;
+        float ukn0;
+        float ukn1;
         if (jiggleData && jiggleData + 72 <= FileSize()) {
             FSeek(jiggleData);
             struct ChainJiggleData {
@@ -987,7 +1160,7 @@ struct ChainNodeData {
                 unsigned int padding <hidden=true>;
             } ChainJiggle;
         }
-        float ukn[4];
+        //float ukn[4];
     }
     FSeek(startof(this)+nodeSz);
 };
@@ -1031,7 +1204,7 @@ struct ChainGroupData {
     AttrFlags attrFlags;
     CollisionFilterFlags collisionFilterFlags;
     Float3 extraNodeLocalPos;
-    if (version == 46 || version == 48 || version == 39 || version == 35) {
+    if (version >= 35) {
         uint tags[4];
         float dampingNoise, dampingNoise;
         float endRotConstMax;
@@ -1042,14 +1215,14 @@ struct ChainGroupData {
         } angleLimitDirectionMode;
         uint16 padding0 <hidden=true>;
     }
-    if (Version == 48)
+    if (Version >= 48)
         uint64 uknI64_00;
     if (version == 5) {
         float ukn;
         Float3 ukn2;
     }
     
-    if (Version == 48) {
+    if (Version >= 48) {
         BoneHashes unknownBoneHash;
         uint32 unknown;
         uint64 unknownI64;
@@ -1058,10 +1231,11 @@ struct ChainGroupData {
             ChainNodeData nextNode;
         }*/
     }
-    if (version == 46 || Version == 48){
-        //uint64 subChainsOffs;
+    if (version >= 52)
+        int64 ukn;
+
+    if (version >= 44)
         StringOffset nextChainName;
-    }
 
     if (nodeTbl > 0) {
         FSeek(nodeTbl);
